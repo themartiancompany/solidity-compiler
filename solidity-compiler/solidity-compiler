@@ -97,6 +97,7 @@ _project_init() {
 _solidity_compiler() {
   local \
     _compiler_backend="${1}" \
+    _target_contracts=() \
     _project_dir \
     _command_args=() \
     _cmd \
@@ -134,7 +135,7 @@ _solidity_compiler() {
 _out_dir_auto_detect(){
   local \
     _contract_dir
-  if [[ "${target_contracts}" != "" ]]; then
+  if [[ "$(_get "target" "contracts")" != "" ]]; then
     _contract_dir="$( \
       dirname \
        "${target_contracts}")"
@@ -226,10 +227,6 @@ _show_config() {
 _globals
 _global_variables
 _requirements
-_config_user_init \
-  "$(_get \
-       "app" \
-       "name")"
 # shellcheck disable=SC2034
 while \
   getopts \
@@ -261,6 +258,14 @@ shift \
 target_contracts+=(
   "$@"
 )
+if [[ "${target_contracts[*]}" ==  "" ]]; then
+  _msg_error \
+    "no contracts given" \
+    0
+  _set_overrides
+  _usage \
+    1
+fi
 _set_overrides
 _config_user_init \
   "$( \
