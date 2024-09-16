@@ -82,7 +82,7 @@ _hardhat_project_init() {
         --save-dev
       hardhat
   )
-  if [[ "${_quiet}" == "y" ]]; then
+  if [[ "${quiet}" == "y" ]]; then
     "${_node_cmd[@]}" 1&>/dev/null
     _hardhat_out="$( \
       _hardhat_init)"
