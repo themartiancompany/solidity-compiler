@@ -83,11 +83,11 @@ _hardhat_project_init() {
       hardhat
   )
   if [[ "${quiet}" == "y" ]]; then
-    "${_node_cmd[@]}" 1&>/dev/null
+    "${_npm_cmd[@]}" 1&>/dev/null
     _hardhat_out="$( \
       _hardhat_init)"
   elif [[ "${quiet}" == "n" ]]; then
-    "${_node_cmd[@]}"
+    "${_npm_cmd[@]}"
     _hardhat_init
   fi
 }
