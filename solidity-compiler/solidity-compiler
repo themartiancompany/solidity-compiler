@@ -123,6 +123,15 @@ _project_init() {
 }
 
 _project_build() {
+  _msg_info \
+    "building contracts"
+  mkdir \
+    -p \
+    contracts
+  cp \
+    -r \
+    "${_target_contracts[@]}" \
+    "contracts"
   npx \
     hardhat \
     compile
@@ -152,7 +161,8 @@ _solidity_compiler() {
   echo \
     "$(pwd)"
   _project_init \
-    "${_work_dir}"
+    "${_work_dir}" || \
+    true
   _project_build
   cd \
     "${_oldpwd}"
