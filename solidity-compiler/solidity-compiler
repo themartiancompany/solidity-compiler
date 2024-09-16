@@ -65,33 +65,64 @@ _node_run() {
     true
 }
 
-_project_init() {
-  local \
-    _project_dir="${1}" \
-    _oldpwd
-  _oldpwd="$( \
-    pwd)"
-  cd \
-    "${_project_dir}"
-  npm \
-    init \
-      -y
-  npm \
-    install \
-      --save-dev \
-      hardhat
+_hardhat_init() {
   echo \
     "\n\n\n" | \
     npx \
       hardhat \
         init
-  tree \
-    .
-  cd \
-    "${_oldpwd}"
+}
+
+_hardhat_project_init() {
+  local \
+    _npm_cmd=()
+  _npm_cmd=(
+    npm
+      install
+        --save-dev
+      hardhat
+  )
+  if [[ "${_quiet}" == "y" ]]; then
+    "${_node_cmd[@]}" 1&>/dev/null
+    _hardhat_out="$( \
+      _hardhat_init)"
+  elif [[ "${_quiet}" == "n" ]]; then
+    "${_node_cmd[@]}"
+    _hardhat_init
+  fi
+}
+
+_node_project_init() {
+  local \
+    _npm_cmd=()
+  _npm_cmd=(
+    npm
+      init
+        -y
+  )
+  if [[ "${_quiet}" == "y" ]]; then
+    "${_node_cmd[@]}" 1&>/dev/null
+  elif [[ "${_quiet}" == "n" ]]; then
+    "${_node_cmd[@]}"
+  fi
+}
+
+_project_init() {
+  local \
+    _project_dir="${1}"
+  _node_project_init
+  _hardhat_project_init
+  # tree \
+  #   .
   # rm \
   #   -rf \
   #   "${_project_dir}"
+}
+
+_project_build() {
+  npx \
+    hardhat \
+    compile
 }
 
 _solidity_compiler() {
@@ -99,10 +130,7 @@ _solidity_compiler() {
     _compiler_backend="${1}" \
     _target_contracts=() \
     _project_dir \
-    _command_args=() \
-    _cmd \
-    _args=() \
-    _network_backend
+    _oldpwd
   shift \
     1
   _target_contracts+=(
@@ -111,8 +139,16 @@ _solidity_compiler() {
   _project_dir="$( \
     mktemp \
       -d)"
+  _oldpwd="$( \
+    pwd)"
+  cd \
+    "${_project_dir}"
   _project_init \
     "${_project_dir}"
+  _project_build
+  cd \
+    "${_oldpwd}"
+
   # _network_setup
   # if [[ "${_target_command}" == "get" ]]; then
   #   "_key_${_target_command}" \
