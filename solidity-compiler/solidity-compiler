@@ -101,9 +101,9 @@ _node_project_init() {
         -y
   )
   if [[ "${quiet}" == "y" ]]; then
-    "${_node_cmd[@]}" 1&>/dev/null
+    "${_npm_cmd[@]}" 1&>/dev/null
   elif [[ "${quiet}" == "n" ]]; then
-    "${_node_cmd[@]}"
+    "${_npm_cmd[@]}"
   fi
 }
 
