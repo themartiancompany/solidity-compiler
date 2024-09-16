@@ -14,9 +14,11 @@ source \
 
 # shellcheck disable=SC2034
 _global_variables() {
+  build_date=""
+  compiler_backend=""
   target_contracts=()
   out_dir=""
-  command_args=()
+  work_dir=""
   color=""
   quiet=""
 }
@@ -25,6 +27,8 @@ _requirements() {
   _check_cmd \
     'node' \
     'nodejs'
+  _check_cmd \
+    'npx'
 }
 
 _get_conf_dir_path() {
@@ -36,16 +40,6 @@ _get_conf_dir_path() {
       "name")"
   echo \
     "${_dir}"
-}
-
-_wallet_address_cmd() {
-  local \
-    _command="${1}" \
-    _lib
-  _lib="$( \
-    _get_lib)/evm-wallet"
-  echo \
-    "${_lib}/address-${_command}"
 }
 
 _node_run() {
@@ -71,54 +65,6 @@ _node_run() {
     true
 }
 
-_network_setup() {
-  if [[ "${_network}" == "gnosis" ]]; then
-    _rpc="https://rpc.gnosischain.com"
-    _network_backend="${_network}"
-  elif [[ "${_network}" == "ethereum" ]]; then
-    _network_backend="etherscan"
-  else
-    _network_backend="${_network}"
-  fi
-}
-
-_api_key_read() {
-  local \
-    _path="${1}"
-  if [ ! -e "${_path}" ]; then
-    _msg_error \
-      "service api key file '${_path}' not found" \
-      1
-  fi
-  cat \
-    "${_path}"
-}
-
-_key_get() {
-  local \
-    _key="${1}"
-  if [[ "${_key}" == "address" ]]; then
-    _cmd="$( \
-      _wallet_address_cmd \
-        "get")"
-    _args+=(
-      "${_wallet_seed}"
-      "${_network_backend}"
-      "${_api_key_path}"
-    )
-  elif [[ "${_key}" == "seed" ]]; then
-    cat \
-      "${_wallet_seed}"
-    return \
-      0
-  elif [[ "${_key}" == "name" ]]; then
-    echo \
-      "${wallet_name}"
-    return \
-      0
-  fi
-}
-
 _project_init() {
   local \
     _project_dir="${1}" \
@@ -130,8 +76,22 @@ _project_init() {
   npm \
     init \
       -y
+  npm \
+    install \
+      --save-dev \
+      hardhat
+  echo \
+    "\n\n\n" | \
+    npx \
+      hardhat \
+        init
+  tree \
+    .
   cd \
     "${_oldpwd}"
+  # rm \
+  #   -rf \
+  #   "${_project_dir}"
 }
 
 _solidity_compiler() {
@@ -171,6 +131,21 @@ _solidity_compiler() {
   #   "${_args[@]}"
 }
 
+_out_dir_auto_detect(){
+  local \
+    _contract_dir
+  if [[ "${target_contracts}" != "" ]]; then
+    _contract_dir="$( \
+      dirname \
+       "${target_contracts}")"
+  else
+    _contract_dir="$( \
+      pwd)"
+  fi
+  echo \
+    "${_contract_dir}"
+}
+
 _set_overrides() {
   _set_override \
     "build" \
@@ -180,6 +155,15 @@ _set_overrides() {
     "compiler" \
     "backend" \
     "hardhat"
+  _set_override \
+    "work" \
+    "dir" \
+    "$(mktemp \
+         -d)"
+  _set_override \
+    "out" \
+    "dir" \
+    "$(_out_dir_auto_detect)"
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
@@ -196,6 +180,7 @@ _set_overrides() {
 # $1: exit status number.
 _usage() {
   local \
+    _exit="${1}" \
     _usage_text
   IFS='' \
     read \
@@ -212,6 +197,11 @@ Usage:
   options:
      -b <backend>         Compiler backend
                           Default: '$(_get "compiler" "backend")'
+     -o <out_dir>         Output directory
+                          Default: '$(_get "out" "dir")'
+     -w <work_dir>        Work directory
+                          Default: '$(_get "work" "dir")'
+
      -h                   This message.
      -c                   Enable color output
      -v                   Enable verbose output
@@ -220,13 +210,16 @@ ENDUSAGETEXT
     '%s\n' \
     "${_usage_text}"
   exit \
-    "${1}"
+    "${_exit}"
 }
 
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "               Build date:   $(_get "build" "date")"
+  _msg_info "         Compiler backend:   $(_get "compiler" "backend")"
+  _msg_info "                  Out dir:   $(_get "out" "dir")"
+  _msg_info "                 Work dir:   $(_get "work" "dir")"
   _msg_info "         Target contracts:   $(_get "target" "contracts")"
 }
 
@@ -240,11 +233,13 @@ _config_user_init \
 # shellcheck disable=SC2034
 while \
   getopts \
-    'b:cvh?' \
+    'b:o:w:cvh?' \
     arg; do
   case \
     "${arg}" in
-    b) override_backend="${OPTARG}" ;;
+    b) override_compiler_backend="${OPTARG}" ;;
+    o) override_out_dir="${OPTARG}" ;;
+    w) override_work_dir="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -274,6 +269,15 @@ _config_user_init \
       "name")"
 _show_config
 app_opts=(
+  "$(_get \
+       "compiler" \
+       "backend")"
+  "$(_get \
+       "work" \
+       "dir")"
+  "$(_get \
+       "out" \
+       "dir")"
   "${target_contracts[@]}"
 )
 _solidity_compiler \
