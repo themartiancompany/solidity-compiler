@@ -112,7 +112,7 @@ _node_project_init() {
 _project_init() {
   local \
     _project_dir="${1}"
-  _node_project_init
+  # _node_project_init
   _hardhat_project_init
   tree \
     -d 0 \
