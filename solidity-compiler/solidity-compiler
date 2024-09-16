@@ -67,7 +67,7 @@ _node_run() {
 
 _hardhat_init() {
   echo \
-    "\n\n\n" | \
+    "3\n" | \
     npx \
       hardhat \
         init
@@ -115,7 +115,7 @@ _project_init() {
   _node_project_init
   _hardhat_project_init
   tree \
-    -d 2 \
+    -d 0 \
     .
   # rm \
   #   -rf \
@@ -158,8 +158,6 @@ _solidity_compiler() {
     pwd)"
   cd \
     "${_work_dir}"
-  echo \
-    "$(pwd)"
   _project_init \
     "${_work_dir}" || \
     true
