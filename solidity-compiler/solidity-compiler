@@ -100,6 +100,8 @@ _node_project_init() {
       init
         -y
   )
+  _msg_info \
+    "setting up node project"
   if [[ "${quiet}" == "y" ]]; then
     "${_npm_cmd[@]}" 1&>/dev/null
   elif [[ "${quiet}" == "n" ]]; then
@@ -112,8 +114,9 @@ _project_init() {
     _project_dir="${1}"
   _node_project_init
   _hardhat_project_init
-  # tree \
-  #   .
+  tree \
+    -d 2 \
+    .
   # rm \
   #   -rf \
   #   "${_project_dir}"
@@ -128,27 +131,31 @@ _project_build() {
 _solidity_compiler() {
   local \
     _compiler_backend="${1}" \
+    _out_dir="${2}" \
+    _work_dir="${3}" \
     _target_contracts=() \
-    _project_dir \
     _oldpwd
   shift \
-    1
+    3
   _target_contracts+=(
     "$@"
   )
-  _project_dir="$( \
-    mktemp \
-      -d)"
+  if [[ "${_work_dir}" == "" ]]; then
+    _work_dir="$( \
+      mktemp \
+        -d)"
+  fi
   _oldpwd="$( \
     pwd)"
   cd \
-    "${_project_dir}"
+    "${_work_dir}"
+  echo \
+    "$(pwd)"
   _project_init \
-    "${_project_dir}"
+    "${_work_dir}"
   _project_build
   cd \
     "${_oldpwd}"
-
   # _network_setup
   # if [[ "${_target_command}" == "get" ]]; then
   #   "_key_${_target_command}" \
@@ -314,10 +321,10 @@ app_opts=(
        "compiler" \
        "backend")"
   "$(_get \
-       "work" \
+       "out" \
        "dir")"
   "$(_get \
-       "out" \
+       "work" \
        "dir")"
   "${target_contracts[@]}"
 )
