@@ -48,9 +48,7 @@ _node_path_get() {
     list | \
     head \
       -n \
-        1 | \
-      awk \
-        '{print $2}'
+        1
 }
 
 _hardhat_init() {
@@ -61,7 +59,7 @@ _hardhat_init() {
   cd \
     "${_project_dir}"
   echo \
-    "\n\n\n\n" | \
+    "3\n" | \
     npx \
       hardhat \
         init
@@ -75,16 +73,18 @@ _hardhat_init() {
 _node_package_path_get() {
  local \
      _pkg="${1}" \
+     _package \
     _node_path \
     _pkg_path
   _node_path="$( \
     _node_path_get)"
-  _pkg_path="${_node_path}/${_pkg}"
-  if [ -e "${_pkg_path}" ]; then
-    _pkg="${_pkg_path}"
+  _package="${_pkg}"
+  _pkg_path="${_node_path}/node_modules/${_pkg}"
+  if [ -d "${_pkg_path}" ]; then
+    _package="${_pkg_path}"
   fi
   echo \
-    "${_pkg}"
+    "${_package}"
 }
 
 _npm_install() {
@@ -108,7 +108,7 @@ _npm_install() {
       "${_package}"
   )
   _msg_info \
-    "setting up hardhat environment"
+    "installing '${_package}' in '${_project_dir}'"
   if [[ "${quiet}" == "y" ]]; then
     "${_npm_cmd[@]}" 1&> \
       /dev/null
@@ -184,8 +184,8 @@ _project_init() {
   _gyp_defines="android_ndk_path=''"
   export \
     GYP_DEFINES="${_gyp_defines}" 
-  # _node_project_init \
-  #   "${_project_dir}"
+  _node_project_init \
+    "${_project_dir}"
   _hardhat_project_init \
     "${_project_dir}"
   cd \
