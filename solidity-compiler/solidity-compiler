@@ -195,7 +195,7 @@ _project_init() {
 _project_build() {
   local \
     _project_dir="${1}" \
-    _out_dir="${1}" \
+    _out_dir="${2}" \
     _oldpwd
   _oldpwd="$( \
     pwd)"
