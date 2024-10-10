@@ -92,8 +92,11 @@ _npm_install() {
     _project_dir="${1}" \
     _pkg="${2}" \
     _npm_cmd=() \
+    _node_path \
     _oldpwd \
     _package
+  _node_path="$( \
+    _node_path_get)"
   _package="$( \
     _node_package_path_get \
       "${_pkg}")"
@@ -109,7 +112,10 @@ _npm_install() {
   )
   _msg_info \
     "installing '${_package}' in '${_project_dir}'"
+  export \
+    NODE_PATH="${_node_path}"
   if [[ "${quiet}" == "y" ]]; then
+    NODE_PATH="${_node_path}" \
     "${_npm_cmd[@]}" 1&> \
       /dev/null
   elif [[ "${quiet}" == "n" ]]; then
@@ -411,9 +417,10 @@ app_opts=(
   "$(_get \
        "compiler" \
        "backend")"
-  "$(_get \
-       "out" \
-       "dir")"
+  "$(realpath \
+       "$(_get \
+           "out" \
+           "dir")")"
   "$(realpath \
       "$(_get \
            "work" \
