@@ -43,6 +43,7 @@ _get_conf_dir_path() {
 }
 
 _node_path_get() {
+  _get_lib || \
   npm \
     -g \
     list | \
@@ -53,9 +54,12 @@ _node_path_get() {
 
 _hardhat_init() {
   local \
-    _oldpwd
+    _oldpwd \
+    _node_path
   _oldpwd="$( \
     pwd)"
+  _node_path="$( \
+    _node_path_get)"
   _msg_info \
     "Node path is: ${_node_path}"
   cd \
@@ -165,7 +169,7 @@ _node_project_init() {
   _oldpwd="$( \
     pwd)"
   _node_path="$( \
-    _node_path_get)/node_modules)"
+    _node_path_get)/node_modules"
   cd \
     "${_project_dir}"
   _npm_cmd=(
@@ -174,7 +178,7 @@ _node_project_init() {
         -y
   )
   _msg_info \
-    "setting up node project"
+    "setting up node project wuth nade path '${_node_path}'"
   export \
     NODE_PATH="${_node_path}"
   if [[ "${quiet}" == "y" ]]; then
@@ -409,6 +413,12 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
+for _contract in "$@"; do
+  target_contracts+=(
+    "$(realpath \
+         "${_contract}")"
+  )
+done
 target_contracts+=(
   "$@"
 )
