@@ -178,7 +178,7 @@ _node_project_init() {
         -y
   )
   _msg_info \
-    "setting up node project wuth nade path '${_node_path}'"
+    "setting up node project with node path '${_node_path}'"
   export \
     NODE_PATH="${_node_path}"
   if [[ "${quiet}" == "y" ]]; then
@@ -216,7 +216,8 @@ _project_build() {
   local \
     _project_dir="${1}" \
     _out_dir="${2}" \
-    _oldpwd
+    _oldpwd \
+    _node_modules
   _oldpwd="$( \
     pwd)"
   _msg_info \
@@ -229,7 +230,14 @@ _project_build() {
   cp \
     -r \
     "${_target_contracts[@]}" \
-    "contracts"
+    "contracts" || \
+    true
+  _node_path="${_project_dir}/node_modules"
+  _msg_info \
+    "running hardhat with node path '${_node_path}'"
+  export \
+    NODE_PATH="${_node_path}"
+  NODE_PATH="${_node_path}" \
   npx \
     hardhat \
     compile
