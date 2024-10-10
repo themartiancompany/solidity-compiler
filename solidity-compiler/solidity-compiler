@@ -414,9 +414,10 @@ app_opts=(
   "$(_get \
        "out" \
        "dir")"
-  "$(_get \
-       "work" \
-       "dir")"
+  "$(realpath \
+      "$(_get \
+           "work" \
+           "dir")")"
   "${target_contracts[@]}"
 )
 _solidity_compiler \
