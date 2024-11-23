@@ -131,7 +131,7 @@ _node_package_path_get() {
           f | \
         cpio \
           -p \
-          -dumv \
+          -dum \
           "${_work_dir}/pkgs/."
       _pkg_path="${_node_path}/${_pkg}"
       cd \
@@ -196,7 +196,7 @@ _hardhat_project_init() {
   _oldpwd="$( \
     pwd)"
   _pkgs=(
-    "@nomicsfoundation/eslint-plugin-hardhat-internal-rules"
+    "@nomicfoundation/eslint-plugin-hardhat-internal-rules"
     "hardhat"
     "@nomicfoundation/solidity-analyzer-android-arm-eabi"
   )
