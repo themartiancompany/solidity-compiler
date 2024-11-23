@@ -171,7 +171,7 @@ _hardhat_project_init() {
   _oldpwd="$( \
     pwd)"
   _pkgs=(
-    "@nomicfoundation/eslint-plugin-hardhat-internal-rules"
+    "eslint-plugin-hardhat-internal-rules"
     "hardhat"
     "@nomicfoundation/solidity-analyzer-android-arm-eabi"
   )
