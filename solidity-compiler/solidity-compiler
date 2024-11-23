@@ -82,13 +82,37 @@ _node_package_path_get() {
      _pkg="${1}" \
      _package \
     _node_path \
-    _pkg_path
+    _pkg_path \
+    _os
+  _os="$( \
+    uname \
+      -o)"
   _node_path="$( \
     _node_path_get)"
   _package="${_pkg}"
   _pkg_path="${_node_path}/node_modules/${_pkg}"
   if [ -d "${_pkg_path}" ]; then
     _package="${_pkg_path}"
+  fi
+  # When installing from a local directory it seems
+  # npm tries to change permissions of the directory,
+  # so if trying to install a package from the local
+  # system node module directory in an non-Android
+  # environment that's not possible.
+  # Wild.
+  # I suppose this should be reported because it doesn't
+  # seem at all something one would ever want to do,
+  # yet it seems reasonable installing packages
+  # from the system node modules tree.
+  if [[ "${_os}" == "GNU/Linux" ]]; then
+    mkdir \
+      -p \
+      "${_work_dir}/pkgs"
+    cp \
+      -r \
+      "${_package}" \
+      "${_work_dir}/pkgs"
+    _package="${_work_dir}/pkgs/${_pkg}"
   fi
   echo \
     "${_package}"
@@ -309,24 +333,51 @@ _out_dir_auto_detect(){
     "${_contract_dir}"
 }
 
-_set_overrides() {
-  _set_override \
-    "build" \
-    "date" \
-    "$(_get_date_human)"
-  _set_override \
-    "compiler" \
-    "backend" \
-    "hardhat"
+_work_dir_auto_detect() {
+  local \
+    _cache_dir \
+    _gid \
+    _uid \
+    _work_dir \
+    _work_dir_name
+  if [[ "$(_get \
+             "work" \
+             "dir")" == "" ]]; then
+    _cache_dir="${HOME}/.cache/$(_get \
+                                   "app" \
+                                   "name")"
+    _work_dir_name="$( \
+      basename \
+        "$(mktemp \
+             -d)")"
+    _work_dir="${_cache_dir}/${_work_dir_name}"
+    mkdir \
+      -p \
+      "${_work_dir}"
+  fi
+  _gid="$( \
+    id \
+      -un)"
+  _uid="$( \
+    id \
+      -un)"
+  chown \
+    -R \
+    "${_uid}:${_gid}" \
+    "${_work_dir}"
+  chmod \
+    -R \
+    755 \
+    "${_work_dir}"
+  _msg_info \
+    "no work dir specified, setting '${_work_dir}'"
   _set_override \
     "work" \
     "dir" \
-    "$(mktemp \
-         -d)"
-  _set_override \
-    "out" \
-    "dir" \
-    "$(_out_dir_auto_detect)"
+    "${_work_dir}"
+}
+
+_set_overrides() {
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
@@ -337,6 +388,19 @@ _set_overrides() {
   elif [[ -z "${color}" ]]; then
     color="n"
   fi
+  _set_override \
+    "build" \
+    "date" \
+    "$(_get_date_human)"
+  _set_override \
+    "compiler" \
+    "backend" \
+    "hardhat"
+  _work_dir_auto_detect
+  _set_override \
+    "out" \
+    "dir" \
+    "$(_out_dir_auto_detect)"
 }
 
 # Show help usage, with an exit status.
