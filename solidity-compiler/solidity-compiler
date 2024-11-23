@@ -109,6 +109,7 @@ _node_package_path_get() {
       -p \
       "${_work_dir}/pkgs"
     cp \
+      --parents \
       -r \
       "${_package}" \
       "${_work_dir}/pkgs"
@@ -171,7 +172,7 @@ _hardhat_project_init() {
   _oldpwd="$( \
     pwd)"
   _pkgs=(
-    "eslint-plugin-hardhat-internal-rules"
+    "@nomicsfoundation/eslint-plugin-hardhat-internal-rules"
     "hardhat"
     "@nomicfoundation/solidity-analyzer-android-arm-eabi"
   )
