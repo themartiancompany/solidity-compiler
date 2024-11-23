@@ -224,8 +224,12 @@ _hardhat_project_init() {
     _pkgs=()
   _oldpwd="$( \
     pwd)"
-  _pkgs=(
+  if [[ "${_dev_deps}" == "y" ]]; then
+    _pkgs+=(
     "@nomicfoundation/eslint-plugin-hardhat-internal-rules"
+    )
+  fi
+  _pkgs+=(
     "hardhat"
     "@nomicfoundation/solidity-analyzer-android-arm-eabi"
   )
