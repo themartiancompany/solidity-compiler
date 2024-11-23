@@ -220,13 +220,17 @@ _hardhat_project_init() {
   local \
     _project_dir="${1}" \
     _oldpwd \
+    _os \
     _pkg \
     _pkgs=()
   _oldpwd="$( \
     pwd)"
-  if [[ "${_dev_deps}" == "y" ]]; then
+  _os="$( \
+    uname \
+      -o)"
+  if [[ "${_os}" == "GNU/Linux" ]]; then
     _pkgs+=(
-    "@nomicfoundation/eslint-plugin-hardhat-internal-rules"
+      "@nomicfoundation/eslint-plugin-hardhat-internal-rules"
     )
   fi
   _pkgs+=(
