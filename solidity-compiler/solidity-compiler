@@ -231,12 +231,17 @@ _hardhat_project_init() {
   if [[ "${_os}" == "GNU/Linux" ]]; then
     _pkgs+=(
       "@nomicfoundation/eslint-plugin-hardhat-internal-rules"
+      "@nomicfoundation/eslint-plugin-slow-imports"
     )
   fi
   _pkgs+=(
     "hardhat"
-    "@nomicfoundation/solidity-analyzer-android-arm-eabi"
   )
+  if [[ "${_os}" == "Android" ]]; then
+    _pkgs+=(
+      "@nomicfoundation/solidity-analyzer-android-arm-eabi"
+    )
+  fi
   cd \
     "${_project_dir}"
   _msg_info \
