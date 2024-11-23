@@ -30,9 +30,9 @@ _requirements() {
     uname \
       -o)"
   if [[ "${_os}" == "GNU/Linux" ]]; then
-    check_cmd \
+    _check_cmd \
       "cpio"
-    check_cmd \
+    _check_cmd \
       "find" \
       "findutils"
   fi
