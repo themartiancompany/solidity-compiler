@@ -122,6 +122,7 @@ _npm_install() {
   local \
     _project_dir="${1}" \
     _pkg="${2}" \
+    _msg=() \
     _npm_cmd=() \
     _node_path \
     _oldpwd \
@@ -141,8 +142,13 @@ _npm_install() {
         --save-dev
       "${_package}"
   )
+  _msg=(
+    "installing '${_package}'"
+    "in '${_project_dir}'"
+    "with node path '${_node_path}'"
+  )
   _msg_info \
-    "installing '${_package}' in '${_project_dir}' with node path '${_node_path}' "
+    "${_msg[*]}"
   export \
     NODE_PATH="${_node_path}"
   if [[ "${quiet}" == "y" ]]; then
@@ -160,18 +166,24 @@ _hardhat_project_init() {
   local \
     _project_dir="${1}" \
     _oldpwd \
+    _pkg \
+    _pkgs=()
   _oldpwd="$( \
     pwd)"
+  _pkgs=(
+    "@nomicfoundation/eslint-plugin-hardhat-internal-rules"
+    "hardhat"
+    "@nomicfoundation/solidity-analyzer-android-arm-eabi"
+  )
   cd \
     "${_project_dir}"
   _msg_info \
     "setting up hardhat environment"
-  _npm_install \
-    "${_project_dir}" \
-    "hardhat"
-  _npm_install \
-    "${_project_dir}" \
-    "@nomicfoundation/solidity-analyzer-android-arm-eabi"
+  for _pkg in "${_pkgs[@]}"; do
+    _npm_install \
+      "${_project_dir}" \
+      "${_pkg}"
+  done
   if [[ "${quiet}" == "y" ]]; then
     _hardhat_out="$( \
       _hardhat_init \
