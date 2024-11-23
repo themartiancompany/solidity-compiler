@@ -24,6 +24,18 @@ _global_variables() {
 }
 
 _requirements() {
+  local \
+    _os
+  _os="$( \
+    uname \
+      -o)"
+  if [[ "${_os}" == "GNU/Linux" ]]; then
+    check_cmd \
+      "cpio"
+    check_cmd \
+      "find" \
+      "findutils"
+  fi
   _check_cmd \
     'node' \
     'nodejs'
@@ -78,42 +90,54 @@ _hardhat_init() {
 }
 
 _node_package_path_get() {
- local \
-     _pkg="${1}" \
-     _package \
+  local \
+    _pkg="${1}" \
+    _package \
     _node_path \
+    _oldpwd \
     _pkg_path \
     _os
   _os="$( \
     uname \
       -o)"
   _node_path="$( \
-    _node_path_get)"
+    _node_path_get)/node_modules"
   _package="${_pkg}"
-  _pkg_path="${_node_path}/node_modules/${_pkg}"
+  _pkg_path="${_node_path}/${_pkg}"
   if [ -d "${_pkg_path}" ]; then
+    # When installing from a local directory it seems
+    # npm tries to change permissions of the directory,
+    # so if trying to install a package from the local
+    # system node module directory in an non-Android
+    # environment that's not possible.
+    # Wild.
+    # I suppose this should be reported because it doesn't
+    # seem at all something one would ever want to do,
+    # yet it seems reasonable installing packages
+    # from the system node modules tree.
+    if [[ "${_os}" == "GNU/Linux" ]]; then
+      mkdir \
+        -p \
+        "${_work_dir}/pkgs"
+      _oldpwd="$( \
+        pwd)"
+      cd \
+        "${_node_path}"
+      find \
+        . \
+        -wholename \
+          "./${_pkg}/*" \
+        -type \
+          f | \
+        cpio \
+          -p \
+          -dumv \
+          "${_work_dir}/pkgs/."
+      _pkg_path="${_node_path}/${_pkg}"
+      cd \
+        "${_oldpwd}"
+    fi
     _package="${_pkg_path}"
-  fi
-  # When installing from a local directory it seems
-  # npm tries to change permissions of the directory,
-  # so if trying to install a package from the local
-  # system node module directory in an non-Android
-  # environment that's not possible.
-  # Wild.
-  # I suppose this should be reported because it doesn't
-  # seem at all something one would ever want to do,
-  # yet it seems reasonable installing packages
-  # from the system node modules tree.
-  if [[ "${_os}" == "GNU/Linux" ]]; then
-    mkdir \
-      -p \
-      "${_work_dir}/pkgs"
-    cp \
-      --parents \
-      -r \
-      "${_package}" \
-      "${_work_dir}/pkgs"
-    _package="${_work_dir}/pkgs/${_pkg}"
   fi
   echo \
     "${_package}"
