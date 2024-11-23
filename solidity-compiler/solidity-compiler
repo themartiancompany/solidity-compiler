@@ -19,6 +19,7 @@ _global_variables() {
   target_contracts=()
   out_dir=""
   work_dir=""
+  dev_deps=""
   color=""
   quiet=""
 }
@@ -175,9 +176,6 @@ _npm_install() {
     _node_path_get)/node_modules"
   _node_package_path_get \
     "${_pkg}"
-  # _package="$( \
-  #   _node_package_path_get \
-  #     "${_pkg}")"
   _oldpwd="$( \
     pwd)"
   cd \
@@ -185,8 +183,18 @@ _npm_install() {
   _npm_cmd=(
     npm
       install
-        --save-dev
-      "${_package}"
+  )
+  if [[ "${_dev_deps}" == "y" ]]; then
+    _npm_cmd+=(
+      --save-dev
+    )
+  elif [[ "${_dev_deps}" == "n" ]]; then
+    _npm_cmd+=(
+      --save-prod
+    )
+  fi
+  _npm_cmd+=(
+    "${_package}"
   )
   _msg=(
     "installing '${_package}'"
@@ -347,10 +355,11 @@ _solidity_compiler() {
     _compiler_backend="${1}" \
     _out_dir="${2}" \
     _work_dir="${3}" \
+    _dev_deps="${4}" \
     _target_contracts=() \
     _oldpwd
   shift \
-    3
+    4
   _target_contracts+=(
     "$@"
   )
@@ -459,6 +468,10 @@ _set_overrides() {
     "out" \
     "dir" \
     "$(_out_dir_auto_detect)"
+  _set_override \
+    "dev" \
+    "deps" \
+    "n"
 }
 
 # Show help usage, with an exit status.
@@ -486,6 +499,8 @@ Usage:
                           Default: '$(_get "out" "dir")'
      -w <work_dir>        Work directory
                           Default: '$(_get "work" "dir")'
+     -d                   Whether to install developer dependencies.
+                          Default: '$(_get "dev" "deps")'
 
      -h                   This message.
      -c                   Enable color output
@@ -505,6 +520,7 @@ _show_config() {
   _msg_info "         Compiler backend:   $(_get "compiler" "backend")"
   _msg_info "                  Out dir:   $(_get "out" "dir")"
   _msg_info "                 Work dir:   $(_get "work" "dir")"
+  _msg_info "   Developer dependencies:   $(_get "dev" "deps")"
   _msg_info "         Target contracts:   $(_get "target" "contracts")"
 }
 
@@ -514,7 +530,7 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'b:o:w:cvh?' \
+    'b:o:w:dcvh?' \
     arg; do
   case \
     "${arg}" in
@@ -525,6 +541,7 @@ while \
     w) override_work_dir="$( \
          realpath \
            "${OPTARG}")" ;;
+    d) override_dev_deps="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -579,6 +596,9 @@ app_opts=(
       "$(_get \
            "work" \
            "dir")")"
+  "$(_get \
+       "dev" \
+       "deps")"
   "${target_contracts[@]}"
 )
 _solidity_compiler \
