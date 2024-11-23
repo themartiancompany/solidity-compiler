@@ -345,7 +345,8 @@ _project_build() {
     hardhat \
     compile
   if [ -d "artifacts" ]; then
-    mv \
+    cp \
+      -r \
       "artifacts/"* \
       "${_out_dir}"
   else
