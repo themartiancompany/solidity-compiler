@@ -92,7 +92,8 @@ _hardhat_init() {
 _node_package_path_get() {
   local \
     _pkg="${1}" \
-    _package \
+    _msg=() \
+    _local_node_path \
     _node_path \
     _oldpwd \
     _pkg_path \
@@ -103,8 +104,17 @@ _node_package_path_get() {
   _node_path="$( \
     _node_path_get)/node_modules"
   _package="${_pkg}"
+  _msg=(
+    "looking for '${_pkg}'"
+    "in local system node"
+    "tree '${_node_path}'"
+  )
+  _msg_info \
+    "${_msg[*]}"
   _pkg_path="${_node_path}/${_pkg}"
   if [ -d "${_pkg_path}" ]; then
+    _msg_info \
+      "found ${_pkg_path} in system tree"
     # When installing from a local directory it seems
     # npm tries to change permissions of the directory,
     # so if trying to install a package from the local
@@ -116,9 +126,17 @@ _node_package_path_get() {
     # yet it seems reasonable installing packages
     # from the system node modules tree.
     if [[ "${_os}" == "GNU/Linux" ]]; then
+      _local_node_path="${_work_dir}/pkgs"
+      _msg=(
+        "copying package in local"
+        "directory tree at"
+        "'${_local_node_path}'"
+      )
+      _msg_info \
+        "${_msg[*]}"
       mkdir \
         -p \
-        "${_work_dir}/pkgs"
+        "${_local_node_path}"
       _oldpwd="$( \
         pwd)"
       cd \
@@ -132,15 +150,15 @@ _node_package_path_get() {
         cpio \
           -p \
           -dum \
-          "${_work_dir}/pkgs/."
-      _pkg_path="${_node_path}/${_pkg}"
+          "${_local_node_path}/."
+      _pkg_path="${_local_node_path}/${_pkg}"
       cd \
         "${_oldpwd}"
     fi
     _package="${_pkg_path}"
   fi
-  echo \
-    "${_package}"
+  # echo \
+  #   "${_package}"
 }
 
 _npm_install() {
@@ -151,12 +169,15 @@ _npm_install() {
     _npm_cmd=() \
     _node_path \
     _oldpwd \
-    _package
+    _package \
+    _pkg_path
   _node_path="$( \
     _node_path_get)/node_modules"
-  _package="$( \
-    _node_package_path_get \
-      "${_pkg}")"
+  _node_package_path_get \
+    "${_pkg}"
+  # _package="$( \
+  #   _node_package_path_get \
+  #     "${_pkg}")"
   _oldpwd="$( \
     pwd)"
   cd \
