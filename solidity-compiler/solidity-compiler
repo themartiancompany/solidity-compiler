@@ -73,14 +73,30 @@ _node_path_get() {
 
 _evm_version_set() {
   local \
-    _config="${1}" \
-    _version="${2}"
-  sed \
-    "/solidity/a settings: {evmVersion: \"${_version}\",}," \
-    "${_config}" | \
-    indent \
-      -kr > \
-    "${_config}"
+    _config_path="${1}" \
+    _version="${2}" \
+    _config \
+    _msg=()
+  _msg=(
+    "setting evm version"
+    " '${_evm_version}' in"
+    "'${_config_path}'"
+  )
+  _msg_info \
+    "${_msg[*]}"
+  _config="$( \
+    sed \
+      "/solidity/a settings: {evmVersion: \"${_version}\",}," \
+      "${_config_path}" | \
+      indent \
+        -kr)"
+  echo \
+    "${_config}" > \
+    "${_config_path}"
+  _msg_info \
+    "new '${_config_path}':"
+  cat \
+    "${_config_path}"
 }
 
 _hardhat_init() {
@@ -108,7 +124,7 @@ _hardhat_init() {
   fi
   rm \
     -rf \
-    "contracts/Lock.sol"
+    "${_project_dir}/contracts/Lock.sol"
   cd \
     "${_oldpwd}"
 }
