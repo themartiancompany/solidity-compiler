@@ -16,6 +16,7 @@ source \
 _global_variables() {
   build_date=""
   compiler_backend=""
+  evm_version=""
   target_contracts=()
   out_dir=""
   work_dir=""
@@ -38,10 +39,14 @@ _requirements() {
       "findutils"
   fi
   _check_cmd \
+    "indent"
+  _check_cmd \
     'node' \
     'nodejs'
   _check_cmd \
     'npx'
+  _check_cmd \
+    "sed"
 }
 
 _get_conf_dir_path() {
@@ -94,8 +99,10 @@ _hardhat_init() {
     npx \
       hardhat \
         init
-  if [[ "${_evm_version}" != "" ]]; then
-    sed '/solidity/a settings: {evmVersion: "shanghai",},' hardhat.config.js | indent -kr
+  if [[ "${_evm_version}" != "auto" ]]; then
+    _evm_version_set \
+      "${_project_dir}/hardhat.config.js" \
+      "${_evm_version}"
   fi
   rm \
     -rf \
@@ -491,6 +498,10 @@ _set_overrides() {
     "compiler" \
     "backend" \
     "hardhat"
+  _set_override \
+    "evm" \
+    "version" \
+    "auto"
   _work_dir_auto_detect
   _set_override \
     "out" \
@@ -558,11 +569,12 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'b:o:w:dcvh?' \
+    'b:e:o:w:dcvh?' \
     arg; do
   case \
     "${arg}" in
     b) override_compiler_backend="${OPTARG}" ;;
+    e) override_evm_version="${OPTARG}" ;;
     o) override_out_dir="$( \
          realpath \
            "${OPTARG}")" ;;
@@ -616,6 +628,9 @@ app_opts=(
   "$(_get \
        "compiler" \
        "backend")"
+  "$(_get \
+       "evm" \
+       "version")"
   "$(realpath \
        "$(_get \
            "out" \
