@@ -65,6 +65,17 @@ _node_path_get() {
         1
 }
 
+_evm_version_set() {
+  local \
+    _config="${1}" \
+    _version="${2}"
+  sed \
+    "/solidity/a settings: {evmVersion: \"${_version}\",}," \
+    "${_config}" | \
+    indent \
+      -kr
+}
+
 _hardhat_init() {
   local \
     _oldpwd \
@@ -83,6 +94,9 @@ _hardhat_init() {
     npx \
       hardhat \
         init
+  if [[ "${_evm_version}" != "" ]]; then
+    sed '/solidity/a settings: {evmVersion: "shanghai",},' hardhat.config.js | indent -kr
+  fi
   rm \
     -rf \
     "contracts/Lock.sol"
