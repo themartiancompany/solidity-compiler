@@ -558,6 +558,7 @@ _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "               Build date:   $(_get "build" "date")"
   _msg_info "         Compiler backend:   $(_get "compiler" "backend")"
+  _msg_info "              EVM version:   $(_get "evm" "version")"
   _msg_info "                  Out dir:   $(_get "out" "dir")"
   _msg_info "                 Work dir:   $(_get "work" "dir")"
   _msg_info "   Developer dependencies:   $(_get "dev" "deps")"
