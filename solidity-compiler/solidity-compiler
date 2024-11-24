@@ -21,6 +21,7 @@ _global_variables() {
   out_dir=""
   work_dir=""
   dev_deps=""
+  cache_clean=""
   color=""
   quiet=""
 }
@@ -78,7 +79,8 @@ _evm_version_set() {
     "/solidity/a settings: {evmVersion: \"${_version}\",}," \
     "${_config}" | \
     indent \
-      -kr
+      -kr > \
+    "${_config}"
 }
 
 _hardhat_init() {
@@ -392,10 +394,11 @@ _solidity_compiler() {
     _out_dir="${3}" \
     _work_dir="${4}" \
     _dev_deps="${5}" \
+    _cache_clean="${6}" \
     _target_contracts=() \
     _oldpwd
   shift \
-    5
+    6
   _target_contracts+=(
     "$@"
   )
@@ -416,9 +419,11 @@ _solidity_compiler() {
     "${_out_dir}"
   cd \
     "${_oldpwd}"
-  rm \
-    -rf \
-    "${_work_dir}"
+  if [[ "${_cache_clean}" == "y" ]]; then
+    rm \
+      -rf \
+      "${_work_dir}"
+  fi
 }
 
 _out_dir_auto_detect(){
@@ -512,6 +517,10 @@ _set_overrides() {
     "dev" \
     "deps" \
     "n"
+  _set_override \
+    "cache" \
+    "clean" \
+    "n"
 }
 
 # Show help usage, with an exit status.
@@ -533,14 +542,19 @@ Usage:
     [options]
     [target_contract]
   options:
-     -b <backend>         Compiler backend
+     -b <backend>         Compiler backend.
                           Default: '$(_get "compiler" "backend")'
-     -o <out_dir>         Output directory
+     -e <evm_version>     Ethereum virtual machine version.
+                          Default: '$(_get "evm" "version")'
+     -o <out_dir>         Output directory.
                           Default: '$(_get "out" "dir")'
      -w <work_dir>        Work directory
                           Default: '$(_get "work" "dir")'
      -d                   Whether to install developer dependencies.
                           Default: '$(_get "dev" "deps")'
+     -l                   Whether to delete the work directory
+                          after a successful build.
+                          Default: '$(_get "cache" "clean")'
 
      -h                   This message.
      -c                   Enable color output
@@ -562,6 +576,7 @@ _show_config() {
   _msg_info "                  Out dir:   $(_get "out" "dir")"
   _msg_info "                 Work dir:   $(_get "work" "dir")"
   _msg_info "   Developer dependencies:   $(_get "dev" "deps")"
+  _msg_info "              Cache clean:   $(_get "cache" "clean")"
   _msg_info "         Target contracts:   $(_get "target" "contracts")"
 }
 
@@ -584,6 +599,7 @@ while \
          realpath \
            "${OPTARG}")" ;;
     d) override_dev_deps="y" ;;
+    l) override_cache_clean="y" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -644,6 +660,9 @@ app_opts=(
   "$(_get \
        "dev" \
        "deps")"
+  "$(_get \
+       "cache" \
+       "clean")"
   "${target_contracts[@]}"
 )
 _solidity_compiler \
