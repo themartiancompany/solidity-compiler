@@ -388,13 +388,14 @@ _project_build() {
 _solidity_compiler() {
   local \
     _compiler_backend="${1}" \
-    _out_dir="${2}" \
-    _work_dir="${3}" \
-    _dev_deps="${4}" \
+    _evm_version="${2}" \
+    _out_dir="${3}" \
+    _work_dir="${4}" \
+    _dev_deps="${5}" \
     _target_contracts=() \
     _oldpwd
   shift \
-    4
+    5
   _target_contracts+=(
     "$@"
   )
