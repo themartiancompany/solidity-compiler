@@ -16,6 +16,7 @@ source \
 _global_variables() {
   build_date=""
   compiler_backend=""
+  solc_version=""
   evm_version=""
   target_contracts=()
   out_dir=""
@@ -79,7 +80,7 @@ _evm_version_set() {
     _msg=()
   _msg=(
     "setting evm version"
-    " '${_evm_version}' in"
+    " '${_version}' in"
     "'${_config_path}'"
   )
   _msg_info \
@@ -87,6 +88,34 @@ _evm_version_set() {
   _config="$( \
     sed \
       "/solidity/a settings: {evmVersion: \"${_version}\",}," \
+      "${_config_path}" | \
+      indent \
+        -kr)"
+  echo \
+    "${_config}" > \
+    "${_config_path}"
+  _msg_info \
+    "new '${_config_path}':"
+  cat \
+    "${_config_path}"
+}
+
+_solc_version_set() {
+  local \
+    _config_path="${1}" \
+    _version="${2}" \
+    _config \
+    _msg=()
+  _msg=(
+    "setting solc version"
+    " '${_version}' in"
+    "'${_config_path}'"
+  )
+  _msg_info \
+    "${_msg[*]}"
+  _config="$( \
+    sed \
+      "/solidity/a version: \"${_version}\"," \
       "${_config_path}" | \
       indent \
         -kr)"
@@ -117,6 +146,11 @@ _hardhat_init() {
     npx \
       hardhat \
         init
+  if [[ "${_solc_version}" != "auto" ]]; then
+    _solc_version_set \
+      "${_project_dir}/hardhat.config.js" \
+      "${_solc_version}"
+  fi
   if [[ "${_evm_version}" != "auto" ]]; then
     _evm_version_set \
       "${_project_dir}/hardhat.config.js" \
@@ -406,15 +440,16 @@ _project_build() {
 _solidity_compiler() {
   local \
     _compiler_backend="${1}" \
-    _evm_version="${2}" \
-    _out_dir="${3}" \
-    _work_dir="${4}" \
-    _dev_deps="${5}" \
-    _cache_clean="${6}" \
+    _solc_version="${2}" \
+    _evm_version="${3}" \
+    _out_dir="${4}" \
+    _work_dir="${5}" \
+    _dev_deps="${6}" \
+    _cache_clean="${7}" \
     _target_contracts=() \
     _oldpwd
   shift \
-    6
+    7
   _target_contracts+=(
     "$@"
   )
@@ -521,6 +556,10 @@ _set_overrides() {
     "backend" \
     "hardhat"
   _set_override \
+    "solc" \
+    "version" \
+    "auto"
+  _set_override \
     "evm" \
     "version" \
     "auto"
@@ -560,6 +599,8 @@ Usage:
   options:
      -b <backend>         Compiler backend.
                           Default: '$(_get "compiler" "backend")'
+     -C <solc_version>    Version of the solc compiler to use.
+                          Default: '$(_get "evm" "version")'
      -e <evm_version>     Ethereum virtual machine version.
                           Default: '$(_get "evm" "version")'
      -o <out_dir>         Output directory.
@@ -588,6 +629,7 @@ _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "               Build date:   $(_get "build" "date")"
   _msg_info "         Compiler backend:   $(_get "compiler" "backend")"
+  _msg_info "             solc version:   $(_get "solc" "version")"
   _msg_info "              EVM version:   $(_get "evm" "version")"
   _msg_info "                  Out dir:   $(_get "out" "dir")"
   _msg_info "                 Work dir:   $(_get "work" "dir")"
@@ -602,11 +644,12 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'b:e:o:w:dcvh?' \
+    'b:C:e:o:w:dcvh?' \
     arg; do
   case \
     "${arg}" in
     b) override_compiler_backend="${OPTARG}" ;;
+    C) override_solc_version="${OPTARG}" ;;
     e) override_evm_version="${OPTARG}" ;;
     o) override_out_dir="$( \
          realpath \
@@ -662,6 +705,9 @@ app_opts=(
   "$(_get \
        "compiler" \
        "backend")"
+  "$(_get \
+       "solc" \
+       "version")"
   "$(_get \
        "evm" \
        "version")"
