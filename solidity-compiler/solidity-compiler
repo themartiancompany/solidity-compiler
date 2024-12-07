@@ -368,6 +368,81 @@ _node_project_init() {
     "${_oldpwd}"
 }
 
+_contract_bytecode_build() {
+  local \
+    _contract="${1}" \
+    _output_json="${2}" \
+    _solc_options=()
+  _solc_options=(
+    --combined-json
+      "abi,asm,ast,bin,metadata"
+    -o
+      "bytecode"
+  )
+  solc \
+    "${_solc_options[@]}" \
+    "${_contract}"
+  mv \
+    "bytecode/combined.json" \
+    "${output_json}"
+  rmdir \
+    "bytecode"
+}
+
+
+_contract_abi_build() {
+  local \
+    _contract="${1}" \
+    _output_json="${2}" \
+    _solc_options=() \
+    _contract_name
+  _contract_name="${_contract%.sol}"
+  _solc_options=(
+    --abi
+    -o
+      "abi"
+  )
+  solc \
+    "${_solc_options[@]}" \
+    "${_contract}"
+  mv \
+    "${_contract_name}.abi"
+    "${output_json}"
+  rmdir \
+    "abi"
+}
+
+_solc_build() {
+  local \
+    _work_dir="${1}" \
+    _out_dir="${2}" \
+    _solc_options=() \
+    _contracts=() \
+    _contract
+  shift \
+    2
+  _contracts=(
+    "$@"
+  )
+  cp \
+    -r \
+    "${_contracts[@]}" \
+    "${_work_dir}"
+  for _contract in "${_contracts[@]}"; do
+    _contract_name="${_contract#.sol}"
+    _contract_abi_build \
+      "${_contract}" \
+      "${_contract_name}.abi.json"
+    _contract_bytecode_build \
+      "${_contract}" \
+      "${_contract_name}.bytecode.json"
+  done
+  cp \
+    -r \
+    "${_work_dir}/"* \
+    "${_out_dir}"
+}
+
 _project_init() {
   local \
     _project_dir="${1}" \
@@ -462,12 +537,19 @@ _solidity_compiler() {
     pwd)"
   cd \
     "${_work_dir}"
-  _project_init \
-    "${_work_dir}" || \
-    true
-  _project_build \
-    "${_work_dir}" \
-    "${_out_dir}"
+  if [[ "${_compiler_backend}" == "hardhat" ]]; then
+    _project_init \
+      "${_work_dir}" || \
+      true
+    _project_build \
+      "${_work_dir}" \
+      "${_out_dir}"
+  elif [[ "${_compiler_backend}" == "solc" ]]; then
+    _solc_build \
+      "${_work_dir}" \
+      "${_out_dir}" \
+      "${_target_contracts[@]}"
+  fi
   cd \
     "${_oldpwd}"
   if [[ "${_cache_clean}" == "y" ]]; then
@@ -536,6 +618,37 @@ _work_dir_auto_detect() {
     "${_work_dir}"
 }
 
+_compiler_backend_auto_detect() {
+  local \
+    _backend \
+    _solc_version
+  _solc_version="$( \
+    _get \
+      "solc" \
+      "version")"
+  if [[ "${_solc_version}" == "auto" ]]; then
+    _backend="hardhat"
+  else
+    _solc="$( \
+      command \
+        -v \
+        "solc${_solc_version}")"
+    if [[ "${_solc}" != "" ]]; then
+      _msg=(
+        "found '${_solc}', setting"
+        " 'solc' as backend"
+      )
+      _msg_info \
+        "${_msg[*]}"
+      _backend="solc"
+    fi
+  fi
+  _set_override \
+    "compiler" \
+    "backend" \
+    "${_backend}"
+}
+
 _set_overrides() {
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
@@ -552,10 +665,6 @@ _set_overrides() {
     "date" \
     "$(_get_date_human)"
   _set_override \
-    "compiler" \
-    "backend" \
-    "hardhat"
-  _set_override \
     "solc" \
     "version" \
     "auto"
@@ -563,6 +672,7 @@ _set_overrides() {
     "evm" \
     "version" \
     "auto"
+  _compiler_backend_auto_detect
   _work_dir_auto_detect
   _set_override \
     "out" \
