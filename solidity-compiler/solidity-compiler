@@ -430,7 +430,7 @@ _contract_abi_build() {
     "${_solc_options[@]}" \
     "${_contract}"
   mv \
-    "${_contract_name}.abi" \
+    "abi/${_contract_name}.abi" \
     "${_output_json}"
   rmdir \
     "abi"
