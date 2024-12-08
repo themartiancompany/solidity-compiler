@@ -421,9 +421,11 @@ _contract_abi_build() {
   )
   _msg=(
     "building contract '${_contract}'"
-    "using ${_solc}"
-    "ABI with options '${_solc_options[@]}'"
+    "ABI using '${_solc}' with options"
+    "'${_solc_options[@]}'"
   )
+  _msg_info \
+    "${_msg[*]}"
   "${_solc}" \
     "${_solc_options[@]}" \
     "${_contract}"
@@ -823,7 +825,7 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'b:C:e:o:w:dcvh?' \
+    'b:C:e:o:w:dlcvh?' \
     arg; do
   case \
     "${arg}" in
