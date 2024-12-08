@@ -371,9 +371,16 @@ _node_project_init() {
 _contract_bytecode_build() {
   local \
     _contract="${1}" \
-    _output_json="${2}" \
+    _evm_version="${2}" \
+    _output_json="${3}" \
     _solc_options=()
-  _solc_options=(
+  if [[ "${_evm_version}" != "auto" ]]; then
+    solc_options+=(
+      --evm-version
+        "${_evm_version}"
+    )
+  fi
+  _solc_options+=(
     --combined-json
       "abi,asm,ast,bin,metadata"
     -o
@@ -393,11 +400,18 @@ _contract_bytecode_build() {
 _contract_abi_build() {
   local \
     _contract="${1}" \
-    _output_json="${2}" \
+    _evm_version="${2}" \
+    _output_json="${3}" \
     _solc_options=() \
     _contract_name
   _contract_name="${_contract%.sol}"
-  _solc_options=(
+  if [[ "${_evm_version}" != "auto" ]]; then
+    solc_options+=(
+      --evm-version
+        "${_evm_version}"
+    )
+  fi
+  _solc_options+=(
     --abi
     -o
       "abi"
@@ -412,24 +426,11 @@ _contract_abi_build() {
     "abi"
 }
 
-_solc_build() {
+_solc_version_check() {
   local \
-    _version="${1}" \
-    _work_dir="${2}" \
-    _out_dir="${3}" \
-    _msg=() \
-    _solc \
-    _solc_options=() \
-    _contracts=() \
-    _contract
-  shift \
-    3
-  _contracts=(
-    "$@"
-  )
-  _solc="$( \
-    _solc_get \
-      "${_version}")"
+    _solc="${1}" \
+    _version="${2}" \
+    _msg=()
   if [[ "${_solc}" == "" ]]; then
     _msg=(
       "solc${_version} not found"
@@ -439,6 +440,30 @@ _solc_build() {
       "${_msg[*]}" \
       1
   fi
+}
+
+_solc_build() {
+  local \
+    _solc_version="${1}" \
+    _evm_version="${2}" \
+    _work_dir="${3}" \
+    _out_dir="${4}" \
+    _msg=() \
+    _solc \
+    _solc_options=() \
+    _contracts=() \
+    _contract
+  shift \
+    4
+  _contracts=(
+    "$@"
+  )
+  _solc="$( \
+    _solc_get \
+      "${_solc_version}")"
+  _solc_version_check \
+    "${_solc}" \
+    "${_solc_version}"
   cp \
     -r \
     "${_contracts[@]}" \
@@ -446,9 +471,11 @@ _solc_build() {
   for _contract in "${_contracts[@]}"; do
     _contract_name="${_contract#.sol}"
     _contract_abi_build \
+      "${_evm_version}" \
       "${_contract}" \
       "${_contract_name}.abi.json"
     _contract_bytecode_build \
+      "${_evm_version}" \
       "${_contract}" \
       "${_contract_name}.bytecode.json"
   done
@@ -562,6 +589,7 @@ _solidity_compiler() {
   elif [[ "${_compiler_backend}" == "solc" ]]; then
     _solc_build \
       "${_solc_version}" \
+      "${_evm_version}" \
       "${_work_dir}" \
       "${_out_dir}" \
       "${_target_contracts[@]}"
@@ -637,11 +665,16 @@ _work_dir_auto_detect() {
 _solc_get() {
   local \
    _solc_version="${1}"  \
-   _solc
+   _solc \
+   _version
+  _version="${_solc_version}"
+  if [[ "${_solc_version}" == "auto" ]]; then
+    _version=""
+  fi
   _solc="$( \
     command \
       -v \
-      "solc${_solc_version}")"
+      "solc${_version}")"
   echo \
     "${_solc}"
 }
@@ -649,26 +682,25 @@ _solc_get() {
 _compiler_backend_auto_detect() {
   local \
     _backend \
-    _solc_version
+    _msg=() \
+    _solc_version \
+    _solc
+  _backend="solc"
   _solc_version="$( \
     _get \
       "solc" \
       "version")"
-  if [[ "${_solc_version}" == "auto" ]]; then
+  _solc="$( \
+    _solc_get \
+      "${_solc_version}")"
+  if [[ "${_solc}" == "" ]]; then
+    _msg=(
+      "'${_solc}' not found, setting"
+      " 'hardhat' as backend"
+    )
+    _msg_info \
+      "${_msg[*]}"
     _backend="hardhat"
-  else
-    _solc="$( \
-      _solc_get \
-        "${_solc_version}")"
-    if [[ "${_solc}" != "" ]]; then
-      _msg=(
-        "found '${_solc}', setting"
-        " 'solc' as backend"
-      )
-      _msg_info \
-        "${_msg[*]}"
-      _backend="solc"
-    fi
   fi
   _set_override \
     "compiler" \
