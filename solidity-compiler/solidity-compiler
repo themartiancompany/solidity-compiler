@@ -407,7 +407,9 @@ _contract_abi_build() {
     _solc_options=() \
     _contract_name \
     _msg=()
-  _contract_name="${_contract%.sol}"
+  _contract_name="$( \
+    basename \
+      "${_contract%.sol}")"
   if [[ "${_evm_version}" != "auto" ]]; then
     solc_options+=(
       --evm-version
