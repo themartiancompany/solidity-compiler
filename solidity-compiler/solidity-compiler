@@ -392,7 +392,7 @@ _contract_bytecode_build() {
     "${_contract}"
   mv \
     "bytecode/combined.json" \
-    "${output_json}"
+    "${_output_json}"
   rmdir \
     "bytecode"
 }
@@ -431,7 +431,7 @@ _contract_abi_build() {
     "${_contract}"
   mv \
     "${_contract_name}.abi"
-    "${output_json}"
+    "${_output_json}"
   rmdir \
     "abi"
 }
