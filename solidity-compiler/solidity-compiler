@@ -414,16 +414,31 @@ _contract_abi_build() {
 
 _solc_build() {
   local \
-    _work_dir="${1}" \
-    _out_dir="${2}" \
+    _version="${1}" \
+    _work_dir="${2}" \
+    _out_dir="${3}" \
+    _msg=() \
+    _solc \
     _solc_options=() \
     _contracts=() \
     _contract
   shift \
-    2
+    3
   _contracts=(
     "$@"
   )
+  _solc="$( \
+    _solc_get \
+      "${_version}")"
+  if [[ "${_solc}" == "" ]]; then
+    _msg=(
+      "solc${_version} not found"
+      "on this system"
+    )
+    _msg_error \
+      "${_msg[*]}" \
+      1
+  fi
   cp \
     -r \
     "${_contracts[@]}" \
@@ -546,6 +561,7 @@ _solidity_compiler() {
       "${_out_dir}"
   elif [[ "${_compiler_backend}" == "solc" ]]; then
     _solc_build \
+      "${_solc_version}" \
       "${_work_dir}" \
       "${_out_dir}" \
       "${_target_contracts[@]}"
@@ -618,6 +634,18 @@ _work_dir_auto_detect() {
     "${_work_dir}"
 }
 
+_solc_get() {
+  local \
+   _solc_version="${1}"  \
+   _solc
+  _solc="$( \
+    command \
+      -v \
+      "solc${_solc_version}")"
+  echo \
+    "${_solc}"
+}
+
 _compiler_backend_auto_detect() {
   local \
     _backend \
@@ -630,9 +658,8 @@ _compiler_backend_auto_detect() {
     _backend="hardhat"
   else
     _solc="$( \
-      command \
-        -v \
-        "solc${_solc_version}")"
+      _solc_get \
+        "${_solc_version}")"
     if [[ "${_solc}" != "" ]]; then
       _msg=(
         "found '${_solc}', setting"
