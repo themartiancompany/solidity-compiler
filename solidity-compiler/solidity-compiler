@@ -371,8 +371,8 @@ _node_project_init() {
 _contract_bytecode_build() {
   local \
     _solc="${1}" \
-    _contract="${2}" \
-    _evm_version="${3}" \
+    _evm_version="${2}" \
+    _contract="${3}" \
     _output_json="${4}" \
     _solc_options=()
   if [[ "${_evm_version}" != "auto" ]]; then
@@ -401,8 +401,8 @@ _contract_bytecode_build() {
 _contract_abi_build() {
   local \
     _solc="${1}" \
-    _contract="${2}" \
-    _evm_version="${3}" \
+    _evm_version="${2}" \
+    _contract="${3}" \
     _output_json="${4}" \
     _solc_options=() \
     _contract_name \
