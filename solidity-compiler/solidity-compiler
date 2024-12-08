@@ -579,26 +579,26 @@ _solidity_compiler() {
     pwd)"
   cd \
     "${_work_dir}"
-  if [[ "${_compiler_backend}" == "hardhat" ]]; then
-    _project_init \
-      "${_work_dir}" || \
-      true
-    _project_build \
-      "${_work_dir}" \
-      "${_out_dir}"
-  elif [[ "${_compiler_backend}" == "solc" ]]; then
+  if [[ "${_compiler_backend}" == "solc" ]]; then
     _solc_build \
       "${_solc_version}" \
       "${_evm_version}" \
       "${_work_dir}" \
       "${_out_dir}" \
       "${_target_contracts[@]}"
+  elif [[ "${_compiler_backend}" == "hardhat" ]]; then
+    _project_init \
+      "${_work_dir}" || \
+      true
+    _project_build \
+      "${_work_dir}" \
+      "${_out_dir}"
   fi
   cd \
     "${_oldpwd}"
   if [[ "${_cache_clean}" == "y" ]]; then
     rm \
-      -rf \
+      -rf -- \
       "${_work_dir}"
   fi
 }
@@ -852,9 +852,6 @@ for _contract in "$@"; do
          "${_contract}")"
   )
 done
-target_contracts+=(
-  "$@"
-)
 if [[ "${target_contracts[*]}" ==  "" ]]; then
   _msg_error \
     "no contracts given" \
