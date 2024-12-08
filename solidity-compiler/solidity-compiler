@@ -370,9 +370,10 @@ _node_project_init() {
 
 _contract_bytecode_build() {
   local \
-    _contract="${1}" \
-    _evm_version="${2}" \
-    _output_json="${3}" \
+    _solc="${1}" \
+    _contract="${2}" \
+    _evm_version="${3}" \
+    _output_json="${4}" \
     _solc_options=()
   if [[ "${_evm_version}" != "auto" ]]; then
     solc_options+=(
@@ -386,7 +387,7 @@ _contract_bytecode_build() {
     -o
       "bytecode"
   )
-  solc \
+  "${_solc}" \
     "${_solc_options[@]}" \
     "${_contract}"
   mv \
@@ -399,11 +400,13 @@ _contract_bytecode_build() {
 
 _contract_abi_build() {
   local \
-    _contract="${1}" \
-    _evm_version="${2}" \
-    _output_json="${3}" \
+    _solc="${1}" \
+    _contract="${2}" \
+    _evm_version="${3}" \
+    _output_json="${4}" \
     _solc_options=() \
-    _contract_name
+    _contract_name \
+    _msg=()
   _contract_name="${_contract%.sol}"
   if [[ "${_evm_version}" != "auto" ]]; then
     solc_options+=(
@@ -416,7 +419,12 @@ _contract_abi_build() {
     -o
       "abi"
   )
-  solc \
+  _msg=(
+    "building contract '${_contract}'"
+    "using ${_solc}"
+    "ABI with options '${_solc_options[@]}'"
+  )
+  "${_solc}" \
     "${_solc_options[@]}" \
     "${_contract}"
   mv \
@@ -471,10 +479,12 @@ _solc_build() {
   for _contract in "${_contracts[@]}"; do
     _contract_name="${_contract#.sol}"
     _contract_abi_build \
+      "${_solc}" \
       "${_evm_version}" \
       "${_contract}" \
       "${_contract_name}.abi.json"
     _contract_bytecode_build \
+      "${_solc}" \
       "${_evm_version}" \
       "${_contract}" \
       "${_contract_name}.bytecode.json"
