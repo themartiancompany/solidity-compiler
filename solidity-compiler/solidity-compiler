@@ -374,7 +374,8 @@ _contract_bytecode_build() {
     _evm_version="${2}" \
     _contract="${3}" \
     _output_json="${4}" \
-    _solc_options=()
+    _solc_options=() \
+    _msg=()
   if [[ "${_evm_version}" != "auto" ]]; then
     solc_options+=(
       --evm-version
@@ -387,6 +388,13 @@ _contract_bytecode_build() {
     -o
       "bytecode"
   )
+  _msg=(
+    "building contract '${_contract}'"
+    "bytecode using '${_solc}' with options"
+    "'${_solc_options[@]}'"
+  )
+  _msg_info \
+    "${_msg[*]}"
   "${_solc}" \
     "${_solc_options[@]}" \
     "${_contract}"
@@ -395,6 +403,12 @@ _contract_bytecode_build() {
     "${_output_json}"
   rmdir \
     "bytecode"
+  _msg=(
+    "contract bytecode correctly saved to"
+    "'${_output_json}'"
+  )
+  _msg_info \
+    "${_msg[*]}"
 }
 
 
@@ -436,6 +450,12 @@ _contract_abi_build() {
     "${_output_json}"
   rmdir \
     "abi"
+  _msg=(
+    "contract ABI correctly saved to"
+    "'${_output_json}'"
+  )
+  _msg_info \
+    "${_msg[*]}"
 }
 
 _solc_version_check() {
