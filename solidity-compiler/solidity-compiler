@@ -501,17 +501,19 @@ _solc_build() {
     "${_contracts[@]}" \
     "${_work_dir}"
   for _contract in "${_contracts[@]}"; do
-    _contract_name="${_contract#.sol}"
+    _contract_name="$( \
+      basename \
+        "${_contract%.sol}")"
     _contract_abi_build \
       "${_solc}" \
       "${_evm_version}" \
       "${_contract}" \
-      "${_contract_name}.abi.json"
+      "${_work_dir}/${_contract_name}.abi.json"
     _contract_bytecode_build \
       "${_solc}" \
       "${_evm_version}" \
       "${_contract}" \
-      "${_contract_name}.bytecode.json"
+      "${_work_dir}/${_contract_name}.bytecode.json"
   done
   cp \
     -r \
