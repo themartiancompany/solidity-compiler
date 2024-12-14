@@ -373,9 +373,13 @@ _contract_bytecode_build() {
     _solc="${1}" \
     _evm_version="${2}" \
     _contract="${3}" \
-    _output_json="${4}" \
+    _output_bin="${4}" \
     _solc_options=() \
-    _msg=()
+    _msg=() \
+    _contract_name
+  _contract_name="$( \
+    basename \
+      "${_contract%.sol}")"
   if [[ "${_evm_version}" != "auto" ]]; then
     solc_options+=(
       --evm-version
@@ -383,8 +387,7 @@ _contract_bytecode_build() {
     )
   fi
   _solc_options+=(
-    --combined-json
-      "abi,asm,ast,bin,metadata"
+    --bin
     -o
       "bytecode"
   )
@@ -399,13 +402,13 @@ _contract_bytecode_build() {
     "${_solc_options[@]}" \
     "${_contract}"
   mv \
-    "bytecode/combined.json" \
-    "${_output_json}"
+    "bytecode/${_contract_name}.bin" \
+    "${_output_bin}"
   rmdir \
     "bytecode"
   _msg=(
     "contract bytecode correctly saved to"
-    "'${_output_json}'"
+    "'${_output_bin}'"
   )
   _msg_info \
     "${_msg[*]}"
@@ -513,7 +516,7 @@ _solc_build() {
       "${_solc}" \
       "${_evm_version}" \
       "${_contract}" \
-      "${_work_dir}/${_contract_name}.bytecode.json"
+      "${_work_dir}/${_contract_name}.bin"
   done
   cp \
     -r \
