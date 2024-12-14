@@ -701,11 +701,30 @@ _work_dir_auto_detect() {
     "${_work_dir}"
 }
 
+_solc_version_get() {
+  local \
+    _solc="${1}"
+  solc \
+    --version | \
+    tail \
+      -n \
+        1 | \
+      awk \
+        '{print $2}' | \
+        cut \
+          -d \
+            '+' \
+          -f \
+            1
+}
+
 _solc_get() {
   local \
    _solc_version="${1}"  \
    _solc \
-   _version
+   _version \
+   _solc_default \
+   _version_default
   _version="${_solc_version}"
   if [[ "${_solc_version}" == "auto" ]]; then
     _version=""
@@ -714,6 +733,18 @@ _solc_get() {
     command \
       -v \
       "solc${_version}")"
+  if [[ "${_solc}" == "" ]]; then
+    _solc_default="$( \
+      command \
+        -v \
+        "solc")"
+    _version_default="$( \
+      _solc_version_get \
+        "${_solc_default}")"
+    if [[ "${_version}" == "${_version_default}" ]]; then
+      _solc="${_solc_default}"
+    fi
+  fi
   echo \
     "${_solc}"
 }
