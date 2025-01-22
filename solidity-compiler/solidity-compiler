@@ -376,7 +376,8 @@ _contract_bytecode_build() {
     _output_bin="${4}" \
     _solc_options=() \
     _msg=() \
-    _contract_name
+    _contract_name \
+    _not_empty
   _contract_name="$( \
     basename \
       "${_contract%.sol}")"
@@ -404,7 +405,20 @@ _contract_bytecode_build() {
   mv \
     "bytecode/${_contract_name}.bin" \
     "${_output_bin}"
-  rmdir \
+  _not_empty="$( \
+    ls \
+      "bytecode")"
+  if [[ "${_not_empty}" != "" ]]; then
+    _msg=(
+      "there were these additional"
+      "files in the bytecode directory:"
+      "${_not_empty}"
+    )
+    _msg_warning \
+      "${_msg[*]}"
+  fi
+  rm \
+    -rf \
     "bytecode"
   _msg=(
     "contract bytecode correctly saved to"
@@ -423,6 +437,7 @@ _contract_abi_build() {
     _output_json="${4}" \
     _solc_options=() \
     _contract_name \
+    _not_empty \
     _msg=()
   _contract_name="$( \
     basename \
@@ -451,7 +466,20 @@ _contract_abi_build() {
   mv \
     "abi/${_contract_name}.abi" \
     "${_output_json}"
-  rmdir \
+  _not_empty="$( \
+    ls \
+      "abi")"
+  if [[ "${_not_empty}" != "" ]]; then
+    _msg=(
+      "there were these additional"
+      "files in the abi directory:"
+      "${_not_empty}"
+    )
+    _msg_warning \
+      "${_msg[*]}"
+  fi
+  rm \
+    -rf \
     "abi"
   _msg=(
     "contract ABI correctly saved to"
