@@ -114,11 +114,19 @@ _solc_version_set() {
   _msg_info \
     "${_msg[*]}"
   _config="$( \
-    sed \
-      "/solidity/a version: \"${_version}\"," \
+    cat \
       "${_config_path}" | \
       indent \
-        -kr)"
+        -kr | \
+        sed \
+          '/solidity:/d')"
+  _config="$( \
+    echo \
+      "${_config}" | \
+      sed \
+        "/module.exports/a solidity: { version: \"${_version}\" }," | \
+        indent \
+          -kr)"
   echo \
     "${_config}" > \
     "${_config_path}"
