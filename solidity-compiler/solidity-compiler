@@ -86,11 +86,15 @@ _evm_version_set() {
   _msg_info \
     "${_msg[*]}"
   _config="$( \
-    sed \
-      "/solidity/a settings: {evmVersion: \"${_version}\",}," \
+    cat \
       "${_config_path}" | \
       indent \
-        -kr)"
+        -kr | \
+        sed \
+          "/solidity/a settings: {evmVersion: \"${_version}\",}," \
+          "${_config_path}" | \
+          indent \
+            -kr)"
   echo \
     "${_config}" > \
     "${_config_path}"
@@ -124,7 +128,7 @@ _solc_version_set() {
     echo \
       "${_config}" | \
       sed \
-        "/module.exports/a solidity: { version: \"${_version}\" }," | \
+        "/module.exports/a solidity: { version: \"${_version}\", }" | \
         indent \
           -kr)"
   echo \
