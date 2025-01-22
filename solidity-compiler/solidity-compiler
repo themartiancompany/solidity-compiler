@@ -867,7 +867,7 @@ Usage:
      -b <backend>         Compiler backend.
                           Default: '$(_get "compiler" "backend")'
      -C <solc_version>    Version of the solc compiler to use.
-                          Default: '$(_get "evm" "version")'
+                          Default: '$(_get "solc" "version")'
      -e <evm_version>     Ethereum virtual machine version.
                           Default: '$(_get "evm" "version")'
      -o <out_dir>         Output directory.
