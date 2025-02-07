@@ -89,7 +89,7 @@ _evm_version_set() {
   _repl=(
     "settings: {"
       "evmVersion:"
-        "\"${_version}\" }"
+        "\"${_version}\", },"
   )
   if [[ "${_solc_version}" == "auto" ]]; then
     _config="$( \
@@ -113,7 +113,7 @@ _evm_version_set() {
         indent \
           -kr | \
           sed \
-          "s/\(\bversion:\".*.\)/\1 ${_repl[*]}/}" | \
+          "s/\(\bversion:\".*,\)/\1 ${_repl[*]}/" | \
           indent \
             -kr)"
   fi
@@ -139,6 +139,10 @@ _solc_version_set() {
   )
   _msg_info \
     "${_msg[*]}"
+  _msg_info \
+    "current '${_config_path}':"
+  cat \
+    "${_config_path}"
   _config="$( \
     cat \
       "${_config_path}" | \
@@ -150,7 +154,7 @@ _solc_version_set() {
     echo \
       "${_config}" | \
       sed \
-        "/module.exports/a solidity: { version: \"${_version}\", }" | \
+        "/module.exports/a solidity: { version:\"${_version}\", }" | \
         indent \
           -kr)"
   echo \
