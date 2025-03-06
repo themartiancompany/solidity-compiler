@@ -651,7 +651,7 @@ _project_build() {
     true
   _node_path="${_project_dir}/node_modules"
   _msg_info \
-    "running hardhat with node path '${_node_path}'"
+    "Running hardhat with node path '${_node_path}'."
   export \
     NODE_PATH="${_node_path}"
   NODE_PATH="${_node_path}" \
@@ -665,15 +665,19 @@ _project_build() {
       "${_out_dir}"
   else
     _msg_error \
-      "contract build failed" \
+      "Contract build failed." \
       0
     cd \
       "${_oldpwd}"
     exit \
       1
   fi
+  if [[ "${quiet}" == "n" ]]; then
+    tree \
+      "${_out_dir}"
+  fi
   _msg_info \
-    "contract build successful"
+    "Contract build successful."
   cd \
     "${_oldpwd}"
 }
@@ -730,14 +734,14 @@ _solidity_compiler() {
 _out_dir_auto_detect(){
   local \
     _contract_dir
-  if [[ "$(_get "target" "contracts")" != "" ]]; then
-    _contract_dir="$( \
-      dirname \
-       "${target_contracts}")"
-  else
+  # if [[ "${target_contracts}" != "" ]]; then
+  #   _contract_dir="$( \
+  #     dirname \
+  #      "${target_contracts}")"
+  # else
     _contract_dir="$( \
       pwd)"
-  fi
+  # fi
   echo \
     "${_contract_dir}"
 }
