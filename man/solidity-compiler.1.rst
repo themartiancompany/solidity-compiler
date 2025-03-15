@@ -55,7 +55,6 @@ This project is part of the EVM Toolchain.
 Options
 =======
 
-  options:
 -b backend         Compiler backend.
 -C solc_version    Version of the solc compiler to use.
 -e evm_version     Ethereum virtual machine version.
