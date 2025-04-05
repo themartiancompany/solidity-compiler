@@ -52,7 +52,11 @@ library.
 
 Be quite careful what you have application pass
 as parameters to the compiler as it is probably currently
-possible to execute arbitrary commands through them.
+possible to execute arbitrary commands through them,
+in particular if you're automatically passing
+to the compiler parameters retrieved from the
+EVM Contracts Source Index without the reference
+client.
 
 This project is part of the EVM Toolchain.
 
