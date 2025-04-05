@@ -50,6 +50,10 @@ It is a dependency for EVM Make and so a build
 dependency for projects written using the LibEVM
 library.
 
+Be quite careful what you have application pass
+as parameters to the compiler as it is probably currently
+possible to execute arbitrary commands through them.
+
 This project is part of the EVM Toolchain.
 
 Options
