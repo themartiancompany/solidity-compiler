@@ -543,6 +543,21 @@ _bytecode_runtimes_find() {
       true)
 }
 
+_abis_find() {
+  mapfile \
+    -d \
+    $'\0' \
+    _abis < \
+    <(find \
+        "abi" \
+	-name \
+          "*.abi" \
+        -type \
+          "f" \
+        -print0 || \
+      true)
+}
+
 _contract_bytecode_runtime_build() {
   local \
     _solc="${1}" \
@@ -620,7 +635,9 @@ _contract_abi_build() {
     _evm_version="${2}" \
     _contract="${3}" \
     _output_json="${4}" \
+    _output_json_dir \
     _solc_opts=() \
+    _abis=() \
     _contract_name \
     _not_empty \
     _msg=()
@@ -650,18 +667,26 @@ _contract_abi_build() {
     "${_contract}"
   mv \
     "abi/${_contract_name}.abi" \
-    "${_output_json}"
-  _not_empty="$( \
-    ls \
-      "abi")"
-  if [[ "${_not_empty}" != "" ]]; then
+    "${_output_json}" || \
+    true
+  _abis_find
+  if [[ "${_abis[*]}" != "" ]]; then
+    _output_json_dir="$( \
+      dirname \
+        "${_output_json}")"
     _msg=(
       "There were these additional"
       "files in the abi directory:"
-      "${_not_empty}."
+      "'${_abis[*]}', copying"
+      "them over to"
+      "'${_output_bytecode_runtime_dir}'."
     )
     _msg_warning \
       "${_msg[*]}"
+    cp \
+      "${_abis[@]}" \
+      "${_output_json_dir}" || \
+    true
   fi
   rm \
     -rf \
