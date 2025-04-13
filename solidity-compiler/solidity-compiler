@@ -74,6 +74,9 @@ _requirements() {
     _npm_package="nodejs"
   fi
   _check_cmd \
+    'npm' \
+    "${_npm_package}"
+  _check_cmd \
     'npx' \
     "${_npm_package}"
   _check_cmd \
@@ -81,6 +84,9 @@ _requirements() {
   _check_cmd \
     'node' \
     "${_nodejs}"
+  _check_cmd \
+    "head" \
+    "coreutils"
   _check_cmd \
     "sed"
 }
@@ -111,9 +117,9 @@ _evm_version_set() {
     repl \
     _msg=()
   _msg=(
-    "setting evm version"
+    "Setting evm version"
     " '${_version}' in"
-    "'${_config_path}'"
+    "'${_config_path}'."
   )
   _msg_info \
     "${_msg[*]}"
@@ -152,7 +158,7 @@ _evm_version_set() {
     "${_config}" > \
     "${_config_path}"
   _msg_info \
-    "new '${_config_path}':"
+    "New '${_config_path}':"
   cat \
     "${_config_path}"
 }
@@ -164,14 +170,14 @@ _solc_version_set() {
     _config \
     _msg=()
   _msg=(
-    "setting solc version"
+    "Setting solc version"
     " '${_version}' in"
-    "'${_config_path}'"
+    "'${_config_path}'."
   )
   _msg_info \
     "${_msg[*]}"
   _msg_info \
-    "current '${_config_path}':"
+    "Current '${_config_path}':"
   cat \
     "${_config_path}"
   _config="$( \
@@ -192,7 +198,7 @@ _solc_version_set() {
     "${_config}" > \
     "${_config_path}"
   _msg_info \
-    "new '${_config_path}':"
+    "New '${_config_path}':"
   cat \
     "${_config_path}"
 }
@@ -320,6 +326,7 @@ _npm_install() {
     _pkg="${2}" \
     _msg=() \
     _npm_cmd=() \
+    _npm_install_opts=() \
     _node_path \
     _oldpwd \
     _package \
@@ -337,21 +344,34 @@ _npm_install() {
       install
   )
   if [[ "${_dev_deps}" == "y" ]]; then
-    _npm_cmd+=(
+    _msg=(
+      "Installing developer"
+      "dependencies."
+    )
+    _msg_info \
+      "${_msg[*]}"
+    _npm_install_opts+=(
       --save-dev
     )
   elif [[ "${_dev_deps}" == "n" ]]; then
-    _npm_cmd+=(
+    _msg=(
+      "Installing production"
+      "dependencies."
+    )
+    _msg_info \
+      "${_msg[*]}"
+    _npm_install_opts+=(
       --save-prod
     )
   fi
   _npm_cmd+=(
+    "${_npm_install_opts[@]}"
     "${_package}"
   )
   _msg=(
-    "installing '${_package}'"
+    "Installing package '${_package}'"
     "in '${_project_dir}'"
-    "with node path '${_node_path}'"
+    "with node path '${_node_path}'."
   )
   _msg_info \
     "${_msg[*]}"
@@ -359,7 +379,7 @@ _npm_install() {
     NODE_PATH="${_node_path}"
   if [[ "${quiet}" == "y" ]]; then
     NODE_PATH="${_node_path}" \
-    "${_npm_cmd[@]}" 1&> \
+      "${_npm_cmd[@]}" 1&> \
       /dev/null
   elif [[ "${quiet}" == "n" ]]; then
     "${_npm_cmd[@]}"
@@ -397,7 +417,7 @@ _hardhat_project_init() {
   cd \
     "${_project_dir}"
   _msg_info \
-    "setting up hardhat environment"
+    "Setting up hardhat environment."
   for _pkg in "${_pkgs[@]}"; do
     _npm_install \
       "${_project_dir}" \
@@ -433,7 +453,7 @@ _node_project_init() {
         -y
   )
   _msg_info \
-    "setting up node project with node path '${_node_path}'"
+    "Setting up new node project with node path '${_node_path}'."
   export \
     NODE_PATH="${_node_path}"
   if [[ "${quiet}" == "y" ]]; then
@@ -452,8 +472,9 @@ _contract_bytecode_build() {
     _solc="${1}" \
     _evm_version="${2}" \
     _contract="${3}" \
-    _output_bin="${4}" \
-    _solc_options=() \
+    _output_bytecode="${4}" \
+    _output_dir \
+    _solc_opts=() \
     _msg=() \
     _contract_name \
     _not_empty
@@ -461,37 +482,37 @@ _contract_bytecode_build() {
     basename \
       "${_contract%.sol}")"
   if [[ "${_evm_version}" != "auto" ]]; then
-    solc_options+=(
+    solc_opts+=(
       --evm-version
         "${_evm_version}"
     )
   fi
-  _solc_options+=(
+  _solc_opts+=(
     --bin
     -o
       "bytecode"
   )
   _msg=(
-    "building contract '${_contract}'"
+    "Building contract '${_contract}'"
     "bytecode using '${_solc}' with options"
-    "'${_solc_options[@]}'"
+    "'${_solc_opts[@]}'."
   )
   _msg_info \
     "${_msg[*]}"
   "${_solc}" \
-    "${_solc_options[@]}" \
+    "${_solc_opts[@]}" \
     "${_contract}"
   mv \
     "bytecode/${_contract_name}.bin" \
-    "${_output_bin}"
+    "${_output_bytecode}"
   _not_empty="$( \
     ls \
       "bytecode")"
   if [[ "${_not_empty}" != "" ]]; then
     _msg=(
-      "there were these additional"
+      "There were these additional"
       "files in the bytecode directory:"
-      "${_not_empty}"
+      "${_not_empty}."
     )
     _msg_warning \
       "${_msg[*]}"
@@ -500,12 +521,73 @@ _contract_bytecode_build() {
     -rf \
     "bytecode"
   _msg=(
-    "contract bytecode correctly saved to"
-    "'${_output_bin}'"
+    "Contract bytecode correctly saved to"
+    "'${_output_bytecode}'."
   )
   _msg_info \
     "${_msg[*]}"
 }
+
+_contract_bytecode_runtime_build() {
+  local \
+    _solc="${1}" \
+    _evm_version="${2}" \
+    _contract="${3}" \
+    _output_bytecode_runtime="${4}" \
+    _solc_opts=() \
+    _msg=() \
+    _contract_name \
+    _not_empty
+  _contract_name="$( \
+    basename \
+      "${_contract%.sol}")"
+  if [[ "${_evm_version}" != "auto" ]]; then
+    solc_opts+=(
+      --evm-version
+        "${_evm_version}"
+    )
+  fi
+  _solc_opts+=(
+    --bin-runtime
+    -o
+      "bytecode-runtime"
+  )
+  _msg=(
+    "Building contract '${_contract}'"
+    "runtime bytecode using '${_solc}'"
+    "with options '${_solc_opts[@]}'."
+  )
+  _msg_info \
+    "${_msg[*]}"
+  "${_solc}" \
+    "${_solc_opts[@]}" \
+    "${_contract}"
+  mv \
+    "bytecode-runtime/${_contract_name}.bin-runtime" \
+    "${_output_bin}"
+  _not_empty="$( \
+    ls \
+      "bytecode-runtime")"
+  if [[ "${_not_empty}" != "" ]]; then
+    _msg=(
+      "There were these additional"
+      "files in the bytecode directory:"
+      "${_not_empty}."
+    )
+    _msg_warning \
+      "${_msg[*]}"
+  fi
+  rm \
+    -rf \
+    "bytecode-runtime"
+  _msg=(
+    "Contract runtime bytecode correctly saved to"
+    "'${_output_bin}'."
+  )
+  _msg_info \
+    "${_msg[*]}"
+}
+
 
 
 _contract_abi_build() {
@@ -514,7 +596,7 @@ _contract_abi_build() {
     _evm_version="${2}" \
     _contract="${3}" \
     _output_json="${4}" \
-    _solc_options=() \
+    _solc_opts=() \
     _contract_name \
     _not_empty \
     _msg=()
@@ -522,25 +604,25 @@ _contract_abi_build() {
     basename \
       "${_contract%.sol}")"
   if [[ "${_evm_version}" != "auto" ]]; then
-    solc_options+=(
+    solc_opts+=(
       --evm-version
         "${_evm_version}"
     )
   fi
-  _solc_options+=(
+  _solc_opts+=(
     --abi
     -o
       "abi"
   )
   _msg=(
-    "building contract '${_contract}'"
+    "Building contract '${_contract}'"
     "ABI using '${_solc}' with options"
-    "'${_solc_options[@]}'"
+    "'${_solc_opts[@]}'."
   )
   _msg_info \
     "${_msg[*]}"
   "${_solc}" \
-    "${_solc_options[@]}" \
+    "${_solc_opts[@]}" \
     "${_contract}"
   mv \
     "abi/${_contract_name}.abi" \
@@ -550,9 +632,9 @@ _contract_abi_build() {
       "abi")"
   if [[ "${_not_empty}" != "" ]]; then
     _msg=(
-      "there were these additional"
+      "There were these additional"
       "files in the abi directory:"
-      "${_not_empty}"
+      "${_not_empty}."
     )
     _msg_warning \
       "${_msg[*]}"
@@ -561,8 +643,8 @@ _contract_abi_build() {
     -rf \
     "abi"
   _msg=(
-    "contract ABI correctly saved to"
-    "'${_output_json}'"
+    "Contract ABI correctly saved to"
+    "'${_output_json}'."
   )
   _msg_info \
     "${_msg[*]}"
@@ -575,8 +657,8 @@ _solc_version_check() {
     _msg=()
   if [[ "${_solc}" == "" ]]; then
     _msg=(
-      "solc${_version} not found"
-      "on this system"
+      "Compiler 'solc${_version}' not found"
+      "on this system."
     )
     _msg_error \
       "${_msg[*]}" \
@@ -584,22 +666,55 @@ _solc_version_check() {
   fi
 }
 
+_solc_output_path_get() {
+  local \
+    _output_type="${1}"
+  _output_path=""
+  if [[ "${_output_type}" == "abi" ]]; then
+    _solc_output_path="${_work_dir}/${_contract_name}.abi.json"
+  elif [[ "${_output_type}" == "bytecode" ]]; then
+    _solc_output_path="${_work_dir}/${_contract_name}.bin"
+  fi
+  _msg=(
+    "Set solc output path '${_solc_output_path}'"
+    "for output type '${_output_type}'."
+  )
+  _msg_info \
+    "${_msg[*]}"
+}
+
 _solc_build() {
   local \
-    _solc_version="${1}" \
-    _evm_version="${2}" \
-    _work_dir="${3}" \
-    _out_dir="${4}" \
+    _output_type="${1}" \
+    _solc_version="${2}" \
+    _evm_version="${3}" \
+    _work_dir="${4}" \
+    _out_dir="${5}" \
     _msg=() \
+    _solc_output_path \
+    _output_types=() \
     _solc \
-    _solc_options=() \
+    _solc_opts=() \
+    _type \
     _contracts=() \
     _contract
   shift \
-    4
+    5
   _contracts=(
     "$@"
   )
+  if [[ "${_output_type}" == "" || \
+        "${_output_type}" == "all" ]]; then
+    _output_types+=(
+      "abi"
+      "bytecode"
+      "bytecode_runtime"
+    )
+  elif [[ "${_output_type}" != "all" ]];  then
+    _output_types+=(
+      "${_output_type}"
+    )
+  fi
   _solc="$( \
     _solc_get \
       "${_solc_version}")"
@@ -614,16 +729,15 @@ _solc_build() {
     _contract_name="$( \
       basename \
         "${_contract%.sol}")"
-    _contract_abi_build \
-      "${_solc}" \
-      "${_evm_version}" \
-      "${_contract}" \
-      "${_work_dir}/${_contract_name}.abi.json"
-    _contract_bytecode_build \
-      "${_solc}" \
-      "${_evm_version}" \
-      "${_contract}" \
-      "${_work_dir}/${_contract_name}.bin"
+    for _type in "${_output_types[@]}"; do
+      _solc_output_path_get \
+        "${_type}"
+      "_contract_${_type}_build" \
+        "${_solc}" \
+        "${_evm_version}" \
+        "${_contract}" \
+        "${_solc_output_path}"
+    done
     # Adding
     # _contract_bytecode_runtime_build \
     #   "${_solc}" \
@@ -738,6 +852,7 @@ _solidity_compiler() {
     "${_work_dir}"
   if [[ "${_compiler_backend}" == "solc" ]]; then
     _solc_build \
+      "${_output_type}"
       "${_solc_version}" \
       "${_evm_version}" \
       "${_work_dir}" \
@@ -911,6 +1026,10 @@ _set_overrides() {
     "build" \
     "date" \
     "$(_get_date_human)"
+  _set_override \
+    "output" \
+    "type" \
+    "all"
   _set_override \
     "solc" \
     "version" \
