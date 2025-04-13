@@ -528,13 +528,30 @@ _contract_bytecode_build() {
     "${_msg[*]}"
 }
 
+_bytecode_runtimes_find() {
+  mapfile \
+    -d \
+    $'\0' \
+    _bytecode_runtimes < \
+    <(find \
+        "bytecode-runtime" \
+	-name \
+          "*.bin-runtime" \
+        -type \
+          "f" \
+        -print0 || \
+      true)
+}
+
 _contract_bytecode_runtime_build() {
   local \
     _solc="${1}" \
     _evm_version="${2}" \
     _contract="${3}" \
     _output_bytecode_runtime="${4}" \
+    _output_bytecode_runtime_dir \
     _solc_opts=() \
+    _bytecode_runtimes=()
     _msg=() \
     _contract_name \
     _not_empty
@@ -562,24 +579,33 @@ _contract_bytecode_runtime_build() {
   "${_solc}" \
     "${_solc_opts[@]}" \
     "${_contract}"
-  mv \
+  cp \
     "bytecode-runtime/${_contract_name}.bin-runtime" \
-    "${_output_bytecode_runtime}"
-  _not_empty="$( \
-    ls \
-      "bytecode-runtime")"
-  if [[ "${_not_empty}" != "" ]]; then
+    "${_output_bytecode_runtime}" || \
+  true
+  _bytecode_runtime_find
+  if [[ "${_bytecode_runtimes[*]}" != "" ]]; then
+    _output_bytecode_runtime_dir="$( \
+      dirname \
+        "${_output_bytecode_runtime}")"
     _msg=(
       "There were these additional"
       "files in the bytecode directory:"
-      "${_not_empty}."
+      "'${_bytecode_runtimes[*]}', copying"
+      "them over to"
+      "'${_output_bytecode_runtime_dir}'."
     )
     _msg_warning \
       "${_msg[*]}"
+    cp \
+      "${_bytecode_runtimes[@]}" \
+      "${_output_bytecode_runtime_dir}" || \
+    true
   fi
   rm \
     -rf \
-    "bytecode-runtime"
+    "bytecode-runtime" || \
+    true
   _msg=(
     "Contract runtime bytecode correctly saved to"
     "'${_output_bytecode_runtime}'."
