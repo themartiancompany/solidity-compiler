@@ -27,9 +27,14 @@ _bin="$( \
       command \
         -v \
 	  "env")")"
-_lib="${_bin}/../lib"
-source \
-  "${_lib}/libcrash-bash/crash-bash"
+_lib="$( \
+  realpath \
+    "${_bin}/../lib")"
+_crash_bash="${_lib}/libcrash-bash/crash-bash"
+_sourced \
+  "${_crash_bash}" 2>/dev/null || \
+  source \
+    "${_crash_bash}"
 
 # shellcheck disable=SC2034
 _global_variables() {
@@ -39,6 +44,7 @@ _global_variables() {
   evm_version=""
   target_contracts=()
   out_dir=""
+  output_type=""
   work_dir=""
   dev_deps=""
   cache_clean=""
@@ -48,24 +54,33 @@ _global_variables() {
 
 _requirements() {
   local \
-    _os
+    _os \
+    _nodejs \
+    _npm_package
   _os="$( \
     uname \
       -o)"
+  _nodejs="nodejs"
+  _check_cmd \
+    "find" \
+    "findutils"
   if [[ "${_os}" == "GNU/Linux" ]]; then
     _check_cmd \
       "cpio"
-    _check_cmd \
-      "find" \
-      "findutils"
   fi
+  if [[ "${_os}" == "GNU/Linux" ]]; then
+    _npm_package="npm"
+  elif [[ "${_os}" == "Android" ]]; then
+    _npm_package="nodejs"
+  fi
+  _check_cmd \
+    'npx' \
+    "${_npm_package}"
   _check_cmd \
     "indent"
   _check_cmd \
     'node' \
-    'nodejs'
-  _check_cmd \
-    'npx'
+    "${_nodejs}"
   _check_cmd \
     "sed"
 }
@@ -73,10 +88,7 @@ _requirements() {
 _get_conf_dir_path() {
   local \
     _dir
-  _dir="${HOME}/.config/$( \
-    _get \
-      "app" \
-      "name")"
+  _dir="${HOME}/.config/${app_name}"
   echo \
     "${_dir}"
 }
@@ -223,6 +235,7 @@ _hardhat_init() {
 _node_package_path_get() {
   local \
     _pkg="${1}" \
+    _find_opts=() \
     _msg=() \
     _local_node_path \
     _node_path \
@@ -236,16 +249,19 @@ _node_package_path_get() {
     _node_path_get)/node_modules"
   _package="${_pkg}"
   _msg=(
-    "looking for '${_pkg}'"
+    "Looking for '${_pkg}'"
     "in local system node"
-    "tree '${_node_path}'"
+    "tree '${_node_path}'."
   )
   _msg_info \
     "${_msg[*]}"
   _pkg_path="${_node_path}/${_pkg}"
   if [ -d "${_pkg_path}" ]; then
+    _msg=(
+      "Found ${_pkg_path} in system tree."
+    )
     _msg_info \
-      "found ${_pkg_path} in system tree"
+      "${_msg[*]}"
     # When installing from a local directory it seems
     # npm tries to change permissions of the directory,
     # so if trying to install a package from the local
@@ -259,9 +275,9 @@ _node_package_path_get() {
     if [[ "${_os}" == "GNU/Linux" ]]; then
       _local_node_path="${_work_dir}/pkgs"
       _msg=(
-        "copying package in local"
+        "Copying package in local"
         "directory tree at"
-        "'${_local_node_path}'"
+        "'${_local_node_path}'."
       )
       _msg_info \
         "${_msg[*]}"
@@ -272,12 +288,15 @@ _node_package_path_get() {
         pwd)"
       cd \
         "${_node_path}"
+      _find_opts=(
+        -wholename
+          "./${_pkg}/*"
+        -type
+          "f"
+      )
       find \
         . \
-        -wholename \
-          "./${_pkg}/*" \
-        -type \
-          f | \
+        "${_find_opts[@]}" | \
         cpio \
           -p \
           -dum \
@@ -288,8 +307,11 @@ _node_package_path_get() {
     fi
     _package="${_pkg_path}"
   fi
-  # echo \
-  #   "${_package}"
+    _msg=(
+      "Set node package path '${_package}'."
+    )
+    _msg_info \
+      "${_msg[*]}"
 }
 
 _npm_install() {
@@ -602,6 +624,12 @@ _solc_build() {
       "${_evm_version}" \
       "${_contract}" \
       "${_work_dir}/${_contract_name}.bin"
+    # Adding
+    # _contract_bytecode_runtime_build \
+    #   "${_solc}" \
+    #   "${_evm_version}" \
+    #   "${_contract}" \
+    #   "${_work_dir}/${_contract_name}.runtime.bin"
   done
   cp \
     -r \
@@ -638,7 +666,7 @@ _project_build() {
   _oldpwd="$( \
     pwd)"
   _msg_info \
-    "building contracts"
+    "Building contracts with hardhat."
   cd \
     "${_project_dir}"
   mkdir \
@@ -677,24 +705,25 @@ _project_build() {
       "${_out_dir}"
   fi
   _msg_info \
-    "Contract build successful."
+    "Hardhat contract build successful."
   cd \
     "${_oldpwd}"
 }
 
 _solidity_compiler() {
   local \
-    _compiler_backend="${1}" \
-    _solc_version="${2}" \
-    _evm_version="${3}" \
-    _out_dir="${4}" \
-    _work_dir="${5}" \
+    _output_type="${1}" \
+    _out_dir="${2}" \
+    _compiler_backend="${3}" \
+    _evm_version="${4}" \
+    _solc_version="${5}" \
     _dev_deps="${6}" \
     _cache_clean="${7}" \
+    _work_dir="${8}" \
     _target_contracts=() \
     _oldpwd
   shift \
-    7
+    8
   _target_contracts+=(
     "$@"
   )
@@ -921,25 +950,34 @@ _usage() {
 Solidity compiler.
 
 Usage:
-  $(_get "app" "name")
+
+  ${app_name}
     [options]
     [target_contract]
-  options:
-     -b <backend>         Compiler backend.
-                          Default: '$(_get "compiler" "backend")'
-     -C <solc_version>    Version of the solc compiler to use.
-                          Default: '$(_get "solc" "version")'
-     -e <evm_version>     Ethereum virtual machine version.
-                          Default: '$(_get "evm" "version")'
+
+  options
+     -t <output_type>     Type of the output to generate.
+                          It can be 'all'.
+                          Default: ${output_type}
      -o <out_dir>         Output directory.
-                          Default: '$(_get "out" "dir")'
-     -w <work_dir>        Work directory
-                          Default: '$(_get "work" "dir")'
-     -d                   Whether to install developer dependencies.
-                          Default: '$(_get "dev" "deps")'
+                          Default: ${out_dir}
      -l                   Whether to delete the work directory
                           after a successful build.
-                          Default: '$(_get "cache" "clean")'
+                          Default: ${cache_clean}
+     -d                   Whether to install developer dependencies.
+                          Default: ${dev_deps}
+
+  compiler options:
+     -b <backend>         Compiler backend.
+                          Default: ${compiler_backend}
+     -C <solc_version>    Version of the solc compiler to use.
+                          Default: ${solc_version}
+     -e <evm_version>     Ethereum virtual machine version.
+                          Default: ${evm_version}
+
+  application options:
+     -w <work_dir>        Work directory
+                          Default: ${work_dir}
 
      -h                   This message.
      -c                   Enable color output
@@ -955,15 +993,17 @@ ENDUSAGETEXT
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "               Build date:   $(_get "build" "date")"
-  _msg_info "         Compiler backend:   $(_get "compiler" "backend")"
-  _msg_info "             solc version:   $(_get "solc" "version")"
-  _msg_info "              EVM version:   $(_get "evm" "version")"
-  _msg_info "                  Out dir:   $(_get "out" "dir")"
-  _msg_info "                 Work dir:   $(_get "work" "dir")"
-  _msg_info "   Developer dependencies:   $(_get "dev" "deps")"
-  _msg_info "              Cache clean:   $(_get "cache" "clean")"
-  _msg_info "         Target contracts:   $(_get "target" "contracts")"
+  _msg_info "               Build date:   ${build_date}"
+  _msg_info "         Target contracts:   ${target_contracts}"
+  _msg_info "                  Out dir:   ${out_dir}"
+  _msg_info "              Cache clean:   ${cache_clean}"
+  _msg_info "   Developer dependencies:   ${dev_deps}"
+  _msg_info "       Compiler options:"
+  _msg_info "         Compiler backend:   ${compiler_backend}"
+  _msg_info "             solc version:   ${solc_version}"
+  _msg_info "              EVM version:   ${evm_version}"
+  _msg_info "    Application options:"
+  _msg_info "                 Work dir:   ${work_dir}"
 }
 
 _globals
@@ -972,32 +1012,45 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'b:C:e:o:w:dlcvh?' \
+    't:o:l:db:C:e:w:lcvh?' \
     arg; do
   case \
     "${arg}" in
-    b) override_compiler_backend="${OPTARG}" ;;
-    C) override_solc_version="${OPTARG}" ;;
-    e) override_evm_version="${OPTARG}" ;;
-    o) override_out_dir="$( \
-         realpath \
-           "${OPTARG}")" ;;
-    w) override_work_dir="$( \
-         realpath \
-           "${OPTARG}")" ;;
-    d) override_dev_deps="y" ;;
-    l) override_cache_clean="y" ;;
-    c) override_color="y" ;;
-    v) override_quiet="n" ;;
-    h|?) _set_overrides && \
-         _usage \
-           0 ;;
-    *)
-    _msg_error \
-      "Invalid argument '${arg}'" \
-      0
-    _usage \
-      1
+    t) \
+      override_output_type="${OPTARG}" ;;
+    o) \
+      override_out_dir="$( \
+        realpath \
+          "${OPTARG}")" ;;
+    l) \
+      override_cache_clean="y" ;;
+    d) \
+      override_dev_deps="y" ;;
+    b) \
+      override_compiler_backend="${OPTARG}" ;;
+    C) \
+      override_solc_version="${OPTARG}" ;;
+    e) \
+      override_evm_version="${OPTARG}" ;;
+    w) \
+      override_work_dir="$( \
+        realpath \
+          "${OPTARG}")" ;;
+    c) \
+      override_color="y" ;;
+    v) \
+      override_quiet="n" ;;
+    h|?) \
+      _set_overrides && \
+      _usage \
+        0 ;;
+    *) \
+      _msg_error \
+        "Invalid argument '${arg}'." \
+        0 && \
+      _set_overrides && \
+      _usage \
+        1
     ;;
   esac
 done
@@ -1006,14 +1059,14 @@ shift \
     OPTIND - 1 \
   ))
 for _contract in "$@"; do
-  target_contracts+=(
-    "$(realpath \
-         "${_contract}")"
+  target_contracts+=( "$( \
+    realpath \
+      "${_contract}")"
   )
 done
 if [[ "${target_contracts[*]}" ==  "" ]]; then
   _msg_error \
-    "no contracts given" \
+    "No contracts specified." \
     0
   _set_overrides
   _usage \
@@ -1021,35 +1074,17 @@ if [[ "${target_contracts[*]}" ==  "" ]]; then
 fi
 _set_overrides
 _config_user_init \
-  "$( \
-    _get \
-      "app" \
-      "name")"
+  "${app_name}"
 _show_config
 app_opts=(
-  "$(_get \
-       "compiler" \
-       "backend")"
-  "$(_get \
-       "solc" \
-       "version")"
-  "$(_get \
-       "evm" \
-       "version")"
-  "$(realpath \
-       "$(_get \
-           "out" \
-           "dir")")"
-  "$(realpath \
-      "$(_get \
-           "work" \
-           "dir")")"
-  "$(_get \
-       "dev" \
-       "deps")"
-  "$(_get \
-       "cache" \
-       "clean")"
+  "${output_type}"
+  "${out_dir}"
+  "${compiler_backend}"
+  "${evm_version}"
+  "${solc_version}"
+  "${dev_deps}"
+  "${cache_clean}"
+  "${work_dir}"
   "${target_contracts[@]}"
 )
 _solidity_compiler \
