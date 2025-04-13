@@ -583,7 +583,7 @@ _contract_bytecode_runtime_build() {
     "bytecode-runtime/${_contract_name}.bin-runtime" \
     "${_output_bytecode_runtime}" || \
   true
-  _bytecode_runtime_find
+  _bytecode_runtimes_find
   if [[ "${_bytecode_runtimes[*]}" != "" ]]; then
     _output_bytecode_runtime_dir="$( \
       dirname \
