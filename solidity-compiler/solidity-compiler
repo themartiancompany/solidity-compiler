@@ -582,7 +582,7 @@ _contract_bytecode_runtime_build() {
     "bytecode-runtime"
   _msg=(
     "Contract runtime bytecode correctly saved to"
-    "'${_output_bin}'."
+    "'${_output_bytecode_runtime}'."
   )
   _msg_info \
     "${_msg[*]}"
