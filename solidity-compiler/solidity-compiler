@@ -551,7 +551,7 @@ _contract_bytecode_runtime_build() {
     _output_bytecode_runtime="${4}" \
     _output_bytecode_runtime_dir \
     _solc_opts=() \
-    _bytecode_runtimes=()
+    _bytecode_runtimes=() \
     _msg=() \
     _contract_name \
     _not_empty
