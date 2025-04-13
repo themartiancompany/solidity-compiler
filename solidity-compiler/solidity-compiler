@@ -564,7 +564,7 @@ _contract_bytecode_runtime_build() {
     "${_contract}"
   mv \
     "bytecode-runtime/${_contract_name}.bin-runtime" \
-    "${_output_bin}"
+    "${_output_bytecode_runtime}"
   _not_empty="$( \
     ls \
       "bytecode-runtime")"
