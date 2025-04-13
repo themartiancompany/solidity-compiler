@@ -588,8 +588,6 @@ _contract_bytecode_runtime_build() {
     "${_msg[*]}"
 }
 
-
-
 _contract_abi_build() {
   local \
     _solc="${1}" \
@@ -674,6 +672,8 @@ _solc_output_path_get() {
     _solc_output_path="${_work_dir}/${_contract_name}.abi.json"
   elif [[ "${_output_type}" == "bytecode" ]]; then
     _solc_output_path="${_work_dir}/${_contract_name}.bin"
+ elif [[ "${_output_type}" == "bytecode_runtime" ]]; then
+    _solc_output_path="${_work_dir}/${_contract_name}.runtime.bin"
   fi
   _msg=(
     "Set solc output path '${_solc_output_path}'"
