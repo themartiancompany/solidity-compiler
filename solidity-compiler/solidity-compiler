@@ -852,7 +852,7 @@ _solidity_compiler() {
     "${_work_dir}"
   if [[ "${_compiler_backend}" == "solc" ]]; then
     _solc_build \
-      "${_output_type}"
+      "${_output_type}" \
       "${_solc_version}" \
       "${_evm_version}" \
       "${_work_dir}" \
