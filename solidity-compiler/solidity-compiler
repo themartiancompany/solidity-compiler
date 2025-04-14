@@ -505,17 +505,24 @@ _contract_bytecode_build() {
   mv \
     "bytecode/${_contract_name}.bin" \
     "${_output_bytecode}"
-  _not_empty="$( \
-    ls \
-      "bytecode")"
-  if [[ "${_not_empty}" != "" ]]; then
+  _bytecodes_find
+  if [[ "${_bytecodes[*]}" != "" ]]; then
+    _output_bytecode_dir="$( \
+      dirname \
+        "${_output_bytecode}")"
     _msg=(
       "There were these additional"
       "files in the bytecode directory:"
-      "${_not_empty}."
+      "'${_bytecodes[*]}', copying"
+      "them over to"
+      "'${_output_bytecode_dir}'."
     )
     _msg_warning \
       "${_msg[*]}"
+    cp \
+      "${_bytecodes[@]}" \
+      "${_output_bytecode_dir}" || \
+    true
   fi
   rm \
     -rf \
@@ -528,34 +535,44 @@ _contract_bytecode_build() {
     "${_msg[*]}"
 }
 
-_bytecode_runtimes_find() {
+_find_extension() {
+  local \
+    _array_name="${1}" \
+    _dir="${2}" \
+    _extension="${3}"
   mapfile \
     -d \
     $'\0' \
-    _bytecode_runtimes < \
+    "${_array_name}" < \
     <(find \
-        "bytecode-runtime" \
+        "${_dir}" \
 	-name \
-          "*.bin-runtime" \
+          "*.${_extension}" \
         -type \
           "f" \
         -print0 || \
       true)
 }
 
+_bytecodes_find() {
+  _find_extension \
+    "_bytecodes" \
+    "bytecode" \
+    "bin"
+}
+
+_bytecode_runtimes_find() {
+  _find_extension \
+    "_bytecode_runtimes" \
+    "bytecode-runtime" \
+    "bin-runtime"
+}
+
 _abis_find() {
-  mapfile \
-    -d \
-    $'\0' \
-    _abis < \
-    <(find \
-        "abi" \
-	-name \
-          "*.abi" \
-        -type \
-          "f" \
-        -print0 || \
-      true)
+  _find_extension \
+    "_abis" \
+    "abi" \
+    "abi"
 }
 
 _contract_bytecode_runtime_build() {
@@ -568,8 +585,7 @@ _contract_bytecode_runtime_build() {
     _solc_opts=() \
     _bytecode_runtimes=() \
     _msg=() \
-    _contract_name \
-    _not_empty
+    _contract_name
   _contract_name="$( \
     basename \
       "${_contract%.sol}")"
@@ -639,7 +655,6 @@ _contract_abi_build() {
     _solc_opts=() \
     _abis=() \
     _contract_name \
-    _not_empty \
     _msg=()
   _contract_name="$( \
     basename \
