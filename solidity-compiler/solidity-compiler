@@ -504,7 +504,8 @@ _contract_bytecode_build() {
     "${_contract}"
   mv \
     "bytecode/${_contract_name}.bin" \
-    "${_output_bytecode}"
+    "${_output_bytecode}" || \
+    true
   _bytecodes_find
   if [[ "${_bytecodes[*]}" != "" ]]; then
     _output_bytecode_dir="$( \
