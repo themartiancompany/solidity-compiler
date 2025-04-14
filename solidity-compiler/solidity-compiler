@@ -679,7 +679,7 @@ _contract_abi_build() {
       "files in the abi directory:"
       "'${_abis[*]}', copying"
       "them over to"
-      "'${_output_bytecode_runtime_dir}'."
+      "'${_output_json_dir}'."
     )
     _msg_warning \
       "${_msg[*]}"
