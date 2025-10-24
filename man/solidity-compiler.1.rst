@@ -36,6 +36,7 @@ Synopsis
 
 solidity-compiler *[options]* *contract_file*
 
+
 Description
 ===========
 
@@ -60,31 +61,40 @@ client.
 
 This project is part of the EVM Toolchain.
 
+
 Options
 =======
 
+-o out_dir         Output directory.
 -b backend         Compiler backend.
 -C solc_version    Version of the solc compiler to use.
 -e evm_version     Ethereum virtual machine version.
--o out_dir         Output directory.
--w work_dir        Work directory
--d                 Whether to install developer dependencies.
 -l                 Whether to delete the work directory
                    after a successful build.
+
+
+Application options
+====================
+
+-w work_dir        Work directory
+-d                 Whether to install developer dependencies.
 
 -h                 Display help.
 -c                 Enable color output.
 -v                 Enable verbose output.
+
 
 Bugs
 ====
 
 https://github.com/themartiancompany/solidity-compiler/-/issues
 
+
 Copyright
 =========
 
 Copyright Pellegrino Prevete. AGPL-3.0.
+
 
 See also
 ========
