@@ -1198,7 +1198,7 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    't:o:l:db:C:e:w:lcvh?' \
+    't:o:ldb:C:e:w:lcvh?' \
     arg; do
   case \
     "${arg}" in
@@ -1251,8 +1251,11 @@ for _contract in "$@"; do
   )
 done
 if [[ "${target_contracts[*]}" ==  "" ]]; then
+  _msg=(
+    "No contracts specified."
+  )
   _msg_error \
-    "No contracts specified." \
+    "${_msg[*]}" \
     0
   _set_overrides
   _usage \
