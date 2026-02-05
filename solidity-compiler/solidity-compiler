@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 #    ----------------------------------------------------------------------
-#    Copyright © 2024, 2025  Pellegrino Prevete
+#    Copyright © 2024, 2025, 2026  Pellegrino Prevete
 #
 #    All rights reserved
 #    ----------------------------------------------------------------------
@@ -21,13 +21,12 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-_bin="$( \
+_bin="$(
   dirname \
-    "$( \
-      command \
-        -v \
-	  "env")")"
-_lib="$( \
+    "$(command \
+         -v \
+         "env")")"
+_lib="$(
   realpath \
     "${_bin}/../lib")"
 _crash_bash="${_lib}/libcrash-bash/crash-bash"
@@ -57,7 +56,7 @@ _requirements() {
     _os \
     _nodejs \
     _npm_package
-  _os="$( \
+  _os="$(
     uname \
       -o)"
   _nodejs="nodejs"
@@ -129,14 +128,14 @@ _evm_version_set() {
         "\"${_version}\", },"
   )
   if [[ "${_solc_version}" == "auto" ]]; then
-    _config="$( \
+    _config="$(
       cat \
         "${_config_path}" | \
         indent \
           -kr | \
           sed \
             "/solidity/d")"
-  _config="$( \
+  _config="$(
     echo \
       "${_config}" | \
       sed \
@@ -144,7 +143,7 @@ _evm_version_set() {
         indent \
           -kr)"
   elif [[ "${_solc_version}" != "auto" ]]; then
-    _config="$( \
+    _config="$(
       cat \
         "${_config_path}" | \
         indent \
@@ -180,14 +179,14 @@ _solc_version_set() {
     "Current '${_config_path}':"
   cat \
     "${_config_path}"
-  _config="$( \
+  _config="$(
     cat \
       "${_config_path}" | \
       indent \
         -kr | \
         sed \
           '/solidity:/d')"
-  _config="$( \
+  _config="$(
     echo \
       "${_config}" | \
       sed \
@@ -207,9 +206,8 @@ _hardhat_init() {
   local \
     _oldpwd \
     _node_path
-  _oldpwd="$( \
-    pwd)"
-  _node_path="$( \
+  _oldpwd="${PWD}"
+  _node_path="$(
     _node_path_get)"
   _msg_info \
     "Node path is: ${_node_path}"
@@ -248,10 +246,10 @@ _node_package_path_get() {
     _oldpwd \
     _pkg_path \
     _os
-  _os="$( \
+  _os="$(
     uname \
       -o)"
-  _node_path="$( \
+  _node_path="$(
     _node_path_get)/node_modules"
   _package="${_pkg}"
   _msg=(
@@ -290,8 +288,7 @@ _node_package_path_get() {
       mkdir \
         -p \
         "${_local_node_path}"
-      _oldpwd="$( \
-        pwd)"
+      _oldpwd="${PWD}"
       cd \
         "${_node_path}"
       _find_opts=(
@@ -331,12 +328,11 @@ _npm_install() {
     _oldpwd \
     _package \
     _pkg_path
-  _node_path="$( \
+  _node_path="$(
     _node_path_get)/node_modules"
   _node_package_path_get \
     "${_pkg}"
-  _oldpwd="$( \
-    pwd)"
+  _oldpwd="${PWD}"
   cd \
     "${_project_dir}"
   _npm_cmd=(
@@ -395,9 +391,8 @@ _hardhat_project_init() {
     _os \
     _pkg \
     _pkgs=()
-  _oldpwd="$( \
-    pwd)"
-  _os="$( \
+  _oldpwd="${PWD}"
+  _os="$(
     uname \
       -o)"
   if [[ "${_os}" == "GNU/Linux" ]]; then
@@ -424,7 +419,7 @@ _hardhat_project_init() {
       "${_pkg}"
   done
   if [[ "${quiet}" == "y" ]]; then
-    _hardhat_out="$( \
+    _hardhat_out="$(
       _hardhat_init \
         "${_project_dir}")"
   elif [[ "${quiet}" == "n" ]]; then
@@ -441,9 +436,8 @@ _node_project_init() {
     _npm_cmd=() \
     _node_path \
     _oldpwd
-  _oldpwd="$( \
-    pwd)"
-  _node_path="$( \
+  _oldpwd="${PWD}"
+  _node_path="$(
     _node_path_get)/node_modules"
   cd \
     "${_project_dir}"
@@ -478,7 +472,7 @@ _contract_bytecode_build() {
     _msg=() \
     _contract_name \
     _not_empty
-  _contract_name="$( \
+  _contract_name="$(
     basename \
       "${_contract%.sol}")"
   if [[ "${_evm_version}" != "auto" ]]; then
@@ -508,7 +502,7 @@ _contract_bytecode_build() {
     true
   _bytecodes_find
   if [[ "${_bytecodes[*]}" != "" ]]; then
-    _output_bytecode_dir="$( \
+    _output_bytecode_dir="$(
       dirname \
         "${_output_bytecode}")"
     _msg=(
@@ -587,7 +581,7 @@ _contract_bytecode_runtime_build() {
     _bytecode_runtimes=() \
     _msg=() \
     _contract_name
-  _contract_name="$( \
+  _contract_name="$(
     basename \
       "${_contract%.sol}")"
   if [[ "${_evm_version}" != "auto" ]]; then
@@ -617,7 +611,7 @@ _contract_bytecode_runtime_build() {
   true
   _bytecode_runtimes_find
   if [[ "${_bytecode_runtimes[*]}" != "" ]]; then
-    _output_bytecode_runtime_dir="$( \
+    _output_bytecode_runtime_dir="$(
       dirname \
         "${_output_bytecode_runtime}")"
     _msg=(
@@ -657,7 +651,7 @@ _contract_abi_build() {
     _abis=() \
     _contract_name \
     _msg=()
-  _contract_name="$( \
+  _contract_name="$(
     basename \
       "${_contract%.sol}")"
   if [[ "${_evm_version}" != "auto" ]]; then
@@ -687,7 +681,7 @@ _contract_abi_build() {
     true
   _abis_find
   if [[ "${_abis[*]}" != "" ]]; then
-    _output_json_dir="$( \
+    _output_json_dir="$(
       dirname \
         "${_output_json}")"
     _msg=(
@@ -782,7 +776,7 @@ _solc_build() {
       "${_output_type}"
     )
   fi
-  _solc="$( \
+  _solc="$(
     _solc_get \
       "${_solc_version}")"
   _solc_version_check \
@@ -793,7 +787,7 @@ _solc_build() {
     "${_contracts[@]}" \
     "${_work_dir}"
   for _contract in "${_contracts[@]}"; do
-    _contract_name="$( \
+    _contract_name="$(
       basename \
         "${_contract%.sol}")"
     for _type in "${_output_types[@]}"; do
@@ -823,8 +817,7 @@ _project_init() {
     _project_dir="${1}" \
     _gyp_defines \
     _oldpwd
-  _oldpwd="$( \
-    pwd)"
+  _oldpwd="${PWD}"
   cd \
     "${_project_dir}"
   _gyp_defines="android_ndk_path=''"
@@ -843,11 +836,14 @@ _project_build() {
     _project_dir="${1}" \
     _out_dir="${2}" \
     _oldpwd \
-    _node_modules
-  _oldpwd="$( \
-    pwd)"
-  _msg_info \
+    _node_modules \
+    _msg=()
+  _oldpwd="${PWD}"
+  _msg=(
     "Building contracts with hardhat."
+  )
+  _msg_info \
+    "${_msg[*]}"
   cd \
     "${_project_dir}"
   mkdir \
@@ -909,12 +905,11 @@ _solidity_compiler() {
     "$@"
   )
   if [[ "${_work_dir}" == "" ]]; then
-    _work_dir="$( \
+    _work_dir="$(
       mktemp \
         -d)"
   fi
-  _oldpwd="$( \
-    pwd)"
+  _oldpwd="${PWD}"
   cd \
     "${_work_dir}"
   if [[ "${_compiler_backend}" == "solc" ]]; then
@@ -946,12 +941,11 @@ _out_dir_auto_detect(){
   local \
     _contract_dir
   # if [[ "${target_contracts}" != "" ]]; then
-  #   _contract_dir="$( \
+  #   _contract_dir="$(
   #     dirname \
   #      "${target_contracts}")"
   # else
-    _contract_dir="$( \
-      pwd)"
+    _contract_dir="${PWD}"
   # fi
   echo \
     "${_contract_dir}"
@@ -964,13 +958,9 @@ _work_dir_auto_detect() {
     _uid \
     _work_dir \
     _work_dir_name
-  if [[ "$(_get \
-             "work" \
-             "dir")" == "" ]]; then
-    _cache_dir="${HOME}/.cache/$(_get \
-                                   "app" \
-                                   "name")"
-    _work_dir_name="$( \
+  if [[ "${work_dir}" == "" ]]; then
+    _cache_dir="${HOME}/.cache/${app_name}"
+    _work_dir_name="$(
       basename \
         "$(mktemp \
              -d)")"
@@ -979,10 +969,10 @@ _work_dir_auto_detect() {
       -p \
       "${_work_dir}"
   fi
-  _gid="$( \
+  _gid="$(
     id \
       -un)"
-  _uid="$( \
+  _uid="$(
     id \
       -un)"
   chown \
@@ -1029,16 +1019,16 @@ _solc_get() {
   if [[ "${_solc_version}" == "auto" ]]; then
     _version=""
   fi
-  _solc="$( \
+  _solc="$(
     command \
       -v \
       "solc${_version}")"
   if [[ "${_solc}" == "" ]]; then
-    _solc_default="$( \
+    _solc_default="$(
       command \
         -v \
         "solc")"
-    _version_default="$( \
+    _version_default="$(
       _solc_version_get \
         "${_solc_default}")"
     if [[ "${_version}" == "${_version_default}" ]]; then
@@ -1056,11 +1046,8 @@ _compiler_backend_auto_detect() {
     _solc_version \
     _solc
   _backend="solc"
-  _solc_version="$( \
-    _get \
-      "solc" \
-      "version")"
-  _solc="$( \
+  _solc_version="${solc_version}"
+  _solc="$(
     _solc_get \
       "${_solc_version}")"
   if [[ "${_solc}" == "" ]]; then
@@ -1205,7 +1192,7 @@ while \
     t) \
       override_output_type="${OPTARG}" ;;
     o) \
-      override_out_dir="$( \
+      override_out_dir="$(
         realpath \
           "${OPTARG}")" ;;
     l) \
@@ -1219,7 +1206,7 @@ while \
     e) \
       override_evm_version="${OPTARG}" ;;
     w) \
-      override_work_dir="$( \
+      override_work_dir="$(
         realpath \
           "${OPTARG}")" ;;
     c) \
@@ -1245,7 +1232,7 @@ shift \
     OPTIND - 1 \
   ))
 for _contract in "$@"; do
-  target_contracts+=( "$( \
+  target_contracts+=( "$(
     realpath \
       "${_contract}")"
   )
