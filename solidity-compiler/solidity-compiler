@@ -476,7 +476,7 @@ _contract_bytecode_build() {
     basename \
       "${_contract%.sol}")"
   if [[ "${_evm_version}" != "auto" ]]; then
-    solc_opts+=(
+    _solc_opts+=(
       --evm-version
         "${_evm_version}"
     )
