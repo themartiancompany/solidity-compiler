@@ -48,6 +48,7 @@ _global_variables() {
   dev_deps=""
   cache_clean=""
   color=""
+  debug=""
   quiet=""
 }
 
@@ -884,7 +885,7 @@ _project_build() {
     exit \
       1
   fi
-  if [[ "${quiet}" == "n" ]]; then
+  if [[ "${debug}" == "n" ]]; then
     tree \
       "${_out_dir}"
   fi
